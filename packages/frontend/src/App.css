@@ -1,7 +1,7 @@
 #root {
-  max-width: 1280px;
+  max-width: 700px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
   text-align: center;
   height: 100vh;
   display: flex;
@@ -17,12 +17,66 @@
 }
 
 header {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
 }
 
-main {
-  flex: 1;
-  width: 100%;
-  max-width: 800px;
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 600px;
   margin: 0 auto;
+  width: 100%;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.new-chat-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.new-chat-btn:hover {
+  background-color: #218838;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column; /* Stack vertically */
+  gap: 20px;
+  height: calc(100% - 80px);
+  overflow: hidden;
+}
+
+.chat-area {
+  flex: 1; /* Takes remaining space */
+  min-height: 0; /* Crucial for scrolling inside flex item */
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-area {
+  width: 100%; /* Full width */
+  height: 200px; /* Fixed height for history */
+  flex-shrink: 0;
+  border-top: 1px solid #ddd;
+}
+
+/* Remove the previous media query since this is now the default */
+@media (max-width: 768px) {
+  .sidebar-area {
+    height: 180px; /* Slightly smaller on mobile if needed */
+  }
 }

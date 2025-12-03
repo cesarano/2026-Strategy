@@ -19,6 +19,30 @@ interface ChatRequest extends Request {
   };
 }
 
+router.get('/sessions', async (req: Request, res: Response) => {
+  try {
+    const sessions = await persistenceService.getAllChatSessions();
+    res.json(sessions);
+  } catch (error) {
+    console.error('Error fetching sessions:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/sessions/:id', async (req: Request, res: Response) => {
+  try {
+    const session = await persistenceService.getChatSession(req.params.id);
+    if (!session) {
+      res.status(404).json({ error: 'Session not found' });
+      return;
+    }
+    res.json(session);
+  } catch (error) {
+    console.error('Error fetching session:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 router.post('/chat', upload.array('files'), async (req: Request, res: Response) => {
   try {
     const { prompt, context, sessionId } = req.body;

@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  max-height: 600px; /* Or specific height */
+  /* max-height: 600px; Removed to allow filling parent */
   border: 1px solid #ccc;
   border-radius: 8px;
   background-color: #f9f9f9;
@@ -44,6 +44,8 @@
   font-size: 14px;
   line-height: 1.4;
   position: relative;
+  word-wrap: break-word;
+  overflow-x: auto; /* Allow horizontal scroll for wide content */
 }
 
 .message.user .message-bubble {
@@ -56,6 +58,91 @@
   background-color: #e9ecef;
   color: #333;
   border-bottom-left-radius: 4px;
+}
+
+/* Markdown Styles for AI Responses */
+.message.ai .message-bubble p {
+  margin: 0 0 8px 0;
+}
+
+.message.ai .message-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.message.ai .message-bubble h1,
+.message.ai .message-bubble h2,
+.message.ai .message-bubble h3,
+.message.ai .message-bubble h4 {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.message.ai .message-bubble ul,
+.message.ai .message-bubble ol {
+  margin: 5px 0 10px 20px;
+  padding-left: 0;
+}
+
+.message.ai .message-bubble li {
+  margin-bottom: 3px;
+}
+
+.message.ai .message-bubble pre {
+  background-color: #2d2d2d;
+  color: #f8f8f2;
+  padding: 10px;
+  border-radius: 5px;
+  overflow-x: auto;
+  margin: 10px 0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+}
+
+.message.ai .message-bubble code {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+}
+
+.message.ai .message-bubble pre code {
+  background-color: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.message.ai .message-bubble blockquote {
+  border-left: 3px solid #bdc3c7;
+  margin: 5px 0;
+  padding-left: 10px;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+.message.ai .message-bubble table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+  font-size: 0.9em;
+}
+
+.message.ai .message-bubble th,
+.message.ai .message-bubble td {
+  border: 1px solid #ddd;
+  padding: 6px;
+  text-align: left;
+}
+
+.message.ai .message-bubble th {
+  background-color: #dfe6e9;
+  font-weight: 600;
+}
+
+.message.ai .message-bubble tr:nth-child(even) {
+  background-color: #f8f9fa;
 }
 
 .timestamp {

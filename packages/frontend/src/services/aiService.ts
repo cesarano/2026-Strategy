@@ -17,6 +17,41 @@ export interface AIResponse {
   };
 }
 
+export interface ChatMessage {
+  id: string;
+  sender: 'user' | 'ai';
+  content: string;
+  timestamp: string;
+  metadata?: any;
+}
+
+export interface ChatSession {
+  id: string;
+  messages: ChatMessage[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const getSessions = async (): Promise<ChatSession[]> => {
+  try {
+    const response = await axios.get<ChatSession[]>(`${API_URL}/sessions`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching sessions:', error);
+    throw error;
+  }
+};
+
+export const getSession = async (id: string): Promise<ChatSession> => {
+  try {
+    const response = await axios.get<ChatSession>(`${API_URL}/sessions/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching session:', error);
+    throw error;
+  }
+};
+
 export const sendMessage = async (prompt: string, files?: File[], context?: Record<string, any>, sessionId?: string): Promise<AIResponse> => {
   const formData = new FormData();
   formData.append('prompt', prompt);

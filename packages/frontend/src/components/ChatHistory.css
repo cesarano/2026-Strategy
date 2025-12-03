@@ -1,0 +1,60 @@
+.chat-history {
+  width: 100%;
+  background-color: #f8f9fa;
+  /* border-left: 1px solid #ddd; Remove side border */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat-history h3 {
+  padding: 10px 20px; /* Reduce padding slightly */
+  margin: 0;
+  border-bottom: 1px solid #ddd;
+  font-size: 1rem;
+  color: #333;
+  background-color: #eee; /* Distinct header */
+}
+
+.session-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.session-item {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.session-item:hover {
+  background-color: #e9ecef;
+}
+
+.session-item.active {
+  background-color: #e3f2fd;
+  border-left: 4px solid #007bff;
+}
+
+.session-date {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.session-preview {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-time {
+  font-size: 0.75rem;
+  color: #999;
+  margin-top: 4px;
+  text-align: right;
+}

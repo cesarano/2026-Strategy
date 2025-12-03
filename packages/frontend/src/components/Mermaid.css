@@ -1,0 +1,57 @@
+.mermaid-wrapper {
+  position: relative;
+  background-color: white;
+  border-radius: 8px;
+  margin: 10px 0;
+  border: 1px solid #eee;
+}
+
+.mermaid-chart {
+  padding: 20px;
+  overflow-x: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.mermaid-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #eee;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.download-btn {
+  background-color: white;
+  border: 1px solid #ddd;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85em;
+  color: #555;
+  transition: all 0.2s;
+}
+
+.download-btn:hover {
+  background-color: #e9ecef;
+  color: #333;
+  border-color: #bbb;
+}
+
+.mermaid-error {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  border: 1px solid #ef9a9a;
+}
+
+.mermaid-error pre {
+  background-color: rgba(255,255,255,0.5);
+  padding: 5px;
+  margin-top: 5px;
+  overflow-x: auto;
+}

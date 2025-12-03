@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { Express, Request, Response } from 'express';
 import aiRoutes from './routes/aiRoutes';
 
@@ -12,6 +15,6 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello from the backend!');
 });
 
-app.listen(port, () => {
-  console.log(`[server]: Server is running at http://localhost:${port}`);
+app.listen(Number(port), '0.0.0.0', () => {
+  console.log(`[server]: Server is running at http://0.0.0.0:${port}`);
 });

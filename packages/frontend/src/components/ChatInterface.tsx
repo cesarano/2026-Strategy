@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { sendMessage, AIResponse } from '../services/aiService';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { sendMessage, getSession } from '../services/aiService';
+import { Mermaid } from './Mermaid';
 import './ChatInterface.css';
 
 interface Message {
@@ -9,12 +12,19 @@ interface Message {
   timestamp: Date;
 }
 
-export const ChatInterface: React.FC = () => {
+interface ChatInterfaceProps {
+  currentSessionId?: string;
+  onSessionUpdate: () => void;
+  onSessionCreated: (sessionId: string) => void;
+}
+
+export const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentSessionId, onSessionUpdate, onSessionCreated }) => {
   const [prompt, setPrompt] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [sessionId, setSessionId] = useState<string | undefined>(undefined);
+  // We track the active session ID internally as well to handle the "first message creates session" case
+  const [activeSessionId, setActiveSessionId] = useState<string | undefined>(currentSessionId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -24,6 +34,34 @@ export const ChatInterface: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Sync with prop
+  useEffect(() => {
+    setActiveSessionId(currentSessionId);
+    if (currentSessionId) {
+      loadSession(currentSessionId);
+    } else {
+      setMessages([]); // Clear chat for new session
+    }
+  }, [currentSessionId]);
+
+  const loadSession = async (id: string) => {
+    setIsLoading(true);
+    try {
+      const session = await getSession(id);
+      const formattedMessages: Message[] = session.messages.map(msg => ({
+        id: msg.id,
+        sender: msg.sender,
+        content: msg.content,
+        timestamp: new Date(msg.timestamp)
+      }));
+      setMessages(formattedMessages);
+    } catch (error) {
+      console.error("Error loading session", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -47,10 +85,15 @@ export const ChatInterface: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await sendMessage(userMessage.content, selectedFiles, undefined, sessionId);
+      const response = await sendMessage(userMessage.content, selectedFiles, undefined, activeSessionId);
       
       if (response.sessionId) {
-        setSessionId(response.sessionId);
+        if (activeSessionId !== response.sessionId) {
+            setActiveSessionId(response.sessionId);
+            onSessionCreated(response.sessionId); // Notify parent
+            // Notify parent to refresh history list
+            setTimeout(onSessionUpdate, 1000); 
+        }
       }
 
       const aiMessage: Message = {
@@ -86,7 +129,37 @@ export const ChatInterface: React.FC = () => {
         {messages.map((msg) => (
           <div key={msg.id} className={`message ${msg.sender}`}>
             <div className="message-bubble">
-              <p>{msg.content}</p>
+              {msg.sender === 'ai' ? (
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    code({ node, className, children, ...props }: any) {
+                      const match = /language-(\w+)/.exec(className || '');
+                      const isMermaid = match && match[1] === 'mermaid';
+
+                      if (isMermaid) {
+                        return <Mermaid chart={String(children).replace(/\n$/, '')} />;
+                      }
+
+                      return match ? (
+                        <div className="code-block">
+                            <pre {...props} className={className}>
+                                <code>{children}</code>
+                            </pre>
+                        </div>
+                      ) : (
+                        <code className={className} {...props}>
+                          {children}
+                        </code>
+                      );
+                    },
+                  }}
+                >
+                  {msg.content}
+                </ReactMarkdown>
+              ) : (
+                <p>{msg.content}</p>
+              )}
               <span className="timestamp">{msg.timestamp.toLocaleTimeString()}</span>
             </div>
           </div>

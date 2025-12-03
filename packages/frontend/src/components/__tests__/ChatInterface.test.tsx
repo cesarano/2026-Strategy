@@ -9,7 +9,9 @@ vi.mock('../../services/aiService');
 
 describe('ChatInterface', () => {
   it('renders input field and send button', () => {
-    render(<ChatInterface />);
+    const mockOnSessionUpdate = vi.fn();
+    const mockOnSessionCreated = vi.fn();
+    render(<ChatInterface onSessionUpdate={mockOnSessionUpdate} onSessionCreated={mockOnSessionCreated} />);
     expect(screen.getByPlaceholderText(/Ask about strategy/i)).toBeInTheDocument();
     expect(screen.getByText(/Send/i)).toBeInTheDocument();
   });
@@ -23,7 +25,9 @@ describe('ChatInterface', () => {
     
     (aiService.sendMessage as any).mockResolvedValue(mockResponse);
 
-    render(<ChatInterface />);
+    const mockOnSessionUpdate = vi.fn();
+    const mockOnSessionCreated = vi.fn();
+    render(<ChatInterface onSessionUpdate={mockOnSessionUpdate} onSessionCreated={mockOnSessionCreated} />);
     
     const input = screen.getByPlaceholderText(/Ask about strategy/i);
     const button = screen.getByText(/Send/i);
