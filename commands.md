@@ -95,3 +95,191 @@ To add a `dev` script for running the backend server with `nodemon` and `ts-node
 
 **Reason:**
 To initialize a local Git repository for the project, which will be used for version control and tracking changes to the codebase.
+
+---
+
+### Connecting to GitHub with SSH
+
+**Note:** These are instructions for connecting the local repository to a remote GitHub repository using SSH.
+
+**1. Check for Existing SSH Keys**
+`ls -al ~/.ssh`
+
+**2. Generate a New SSH Key (if needed)`
+`ssh-keygen -t ed25519 -C "your_email@example.com"`
+
+**3. Add Your SSH Key to the ssh-agent**
+`eval "$(ssh-agent -s)"`
+`ssh-add ~/.ssh/id_ed25519`
+
+**4. Add the SSH Key to Your GitHub Account**
+`cat ~/.ssh/id_ed25519.pub`
+(Copy the output and add it to your GitHub account settings)
+
+**5. Test Your SSH Connection**
+`ssh -T git@github.com`
+
+**6. Connect Your Local Repository to GitHub**
+`git remote add origin <your-ssh-url>`
+`git branch -M main`
+`git add .`
+`git commit -m "Initial commit: project structure and setup"`
+`git push -u origin main`
+
+---
+
+### Fixing a Rejected Push (Divergent Branches)
+
+**Note:** These commands are used to fix push errors when the local and remote histories have diverged. This is a common one-time setup issue.
+
+**1. Configure pull strategy to merge (solves the 'fatal' error)**
+`git config pull.rebase false`
+
+**2. Pull and merge unrelated histories (non-interactive)**
+`git pull origin main --allow-unrelated-histories --no-edit`
+
+**3. Push your changes again**
+`git push origin main`
+
+---
+
+### Defining Data Models
+
+**File Creation:**
+**File:** `packages/backend/src/types.ts`
+
+**Reason:**
+To define the core data structures (`Solution` and `StrategicInitiative`) for the application using TypeScript interfaces.
+
+---
+
+### Setting Up Backend Testing
+
+**Command:**
+`npm install -D jest ts-jest @types/jest`
+
+**Reason:**
+To install Jest and its related TypeScript dependencies (`ts-jest`, `@types/jest`) to set up the testing framework for the backend.
+
+---
+
+### Configuring Jest for Backend
+
+**File Creation:**
+**File:** `packages/backend/jest.config.js`
+
+**Reason:**
+To configure Jest for the backend, specifying that it should use the `ts-jest` preset to handle TypeScript files and run in a Node.js environment.
+
+---
+
+### Adding Backend Test Script
+
+**Modification:**
+**File:** `packages/backend/package.json`
+
+**Reason:**
+To replace the placeholder `test` script with a script that runs Jest, allowing tests to be executed with `npm test`.
+
+---
+
+### Creating Backend Test Directory
+
+**Command:**
+`mkdir -p src/__tests__`
+
+**Reason:**
+To create a directory to hold the test files for the backend application.
+
+---
+
+### Creating Data Model Test File
+
+**File Creation:**
+**File:** `packages/backend/src/__tests__/types.test.ts`
+
+**Reason:**
+To create a test file for the data models, ensuring that the `Solution` and `StrategicInitiative` interfaces can be used as expected.
+
+---
+
+### Implementing AI Specialist Service
+
+**File Creation & Dependencies:**
+**Command:** `npm install pdf-parse` and `npm install -D @types/pdf-parse` (in backend)
+**File:** `packages/backend/src/services/ai/AISpecialist.ts`
+**File:** `packages/backend/src/services/ai/__tests__/AISpecialist.test.ts`
+
+**Reason:**
+To create the `AISpecialist` class responsible for handling AI requests. Installed `pdf-parse` to allow extracting text from PDF files to be used as context for the AI.
+
+---
+
+### Creating AI API Routes
+
+**File Creation & Dependencies:**
+**Command:** `npm install multer` and `npm install -D @types/multer` (in backend)
+**File:** `packages/backend/src/routes/aiRoutes.ts`
+**File:** `packages/backend/src/routes/__tests__/aiRoutes.test.ts`
+**Modification:** `packages/backend/src/index.ts` (Mounted routes)
+
+**Reason:**
+To expose the AI capabilities via a REST API. `multer` was installed to handle `multipart/form-data` requests, allowing file uploads alongside text prompts. The routes were mounted in the main Express app.
+
+---
+
+### Integrating Google Gemini
+
+**Command:** `npm install @google/generative-ai dotenv` (in backend)
+**Modification:** `packages/backend/src/services/ai/AISpecialist.ts`
+
+**Reason:**
+To integrate the real Google Gemini API using the `@google/generative-ai` SDK. The service was updated to use the API key from environment variables and fallback to a mock response if the key is missing or the request fails.
+
+---
+
+### Frontend AI Integration
+
+**Command:** `npm install axios` (in frontend)
+**File:** `packages/frontend/src/services/aiService.ts`
+**File:** `packages/frontend/src/components/ChatInterface.tsx`
+**File:** `packages/frontend/src/components/ChatInterface.css`
+**Modification:** `packages/frontend/src/App.tsx`
+**Modification:** `packages/frontend/vite.config.ts` (Added proxy)
+
+**Reason:**
+To create the user interface for interacting with the AI. `axios` was added for API requests. A `ChatInterface` component was built to handle messaging and file uploads. The Vite config was updated to proxy `/api` requests to the backend development server.
+
+---
+
+### Frontend Testing Setup
+
+**Command:** `npm install -D @testing-library/react @testing-library/jest-dom @testing-library/user-event vitest jsdom` (in frontend)
+**File:** `packages/frontend/src/components/__tests__/ChatInterface.test.tsx`
+**File:** `packages/frontend/src/test/setup.ts`
+**Modification:** `packages/frontend/vite.config.ts` (configured Vitest)
+
+**Reason:**
+To set up a testing environment for the React frontend using Vitest and React Testing Library, ensuring the UI components function correctly.
+
+---
+
+### Implementing Persistence
+
+**Command:** `npm install uuid` and `npm install -D @types/uuid` (in backend)
+**File:** `packages/backend/src/services/persistence/FilePersistenceService.ts`
+**File:** `packages/backend/src/services/persistence/__tests__/FilePersistenceService.test.ts`
+**Modification:** `packages/backend/src/routes/aiRoutes.ts`
+
+**Reason:**
+To save chat history. A `FilePersistenceService` was created to store chat sessions as JSON files in a `data` directory. The AI route was updated to save messages to this persistent storage.
+
+---
+
+### Fixing UUID Compatibility
+
+**Command:** `npm install uuid@9` (in backend)
+**Modification:** `packages/backend/jest.config.js` (Reverted mapping)
+
+**Reason:**
+Downgraded `uuid` to version 9 to resolve an ECMAScript Module (ESM) compatibility issue with Jest, which was causing test failures with the default export of version 11+.
