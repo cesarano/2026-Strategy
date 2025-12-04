@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getSessions, type ChatSession } from '../services/aiService';
+import { getSessions, type ChatSession } from '../../../services/aiService';
 import './ChatHistory.css';
 
 interface ChatHistoryProps {

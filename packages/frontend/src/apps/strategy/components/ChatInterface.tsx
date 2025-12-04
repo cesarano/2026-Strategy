@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { sendMessage, getSession } from '../services/aiService';
-import { Mermaid } from './Mermaid';
+import { sendMessage, getSession } from '../../../services/aiService';
+import { Mermaid } from '../../../components/shared/Mermaid';
 import './ChatInterface.css';
 
 interface Message {

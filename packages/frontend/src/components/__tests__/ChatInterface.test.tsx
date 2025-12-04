@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { ChatInterface } from '../ChatInterface';
+import { ChatInterface } from '../../apps/strategy/components/ChatInterface';
 import * as aiService from '../../services/aiService';
 import '@testing-library/jest-dom';
 

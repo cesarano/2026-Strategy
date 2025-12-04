@@ -9,17 +9,30 @@
   box-sizing: border-box;
 }
 
+/* Base styling for the app container - common to all modes */
 .app-container {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100%;
   width: 100%;
+  border-radius: 8px; /* Consistent border radius */
+  overflow: hidden; /* Important for border-radius */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+/* Mode-specific backgrounds */
+.app-container--strategy {
+  background-color: #f9f9f9; /* Light grey for strategy */
+}
+
+.app-container--mode2 {
+  background-color: #f0f8ff; /* AliceBlue for Mode 2 */
 }
 
 header {
-  margin-bottom: 15px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
+  padding: 15px 20px;
+  border-bottom: 1px solid #ddd;
+  background-color: #ffffff; /* White header background */
 }
 
 .header-content {
@@ -34,49 +47,23 @@ header {
 h1 {
   margin: 0;
   font-size: 1.5rem;
+  color: #333;
 }
 
-.new-chat-btn {
-  background-color: #28a745;
-  color: white;
-  border: none;
+/* Global button style for mode toggle */
+button {
   padding: 8px 16px;
   border-radius: 20px;
+  border: none;
+  background-color: #007bff;
+  color: white;
   cursor: pointer;
   font-weight: bold;
   transition: background-color 0.2s;
 }
 
-.new-chat-btn:hover {
-  background-color: #218838;
+button:hover {
+  background-color: #0056b3;
 }
 
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column; /* Stack vertically */
-  gap: 20px;
-  height: calc(100% - 80px);
-  overflow: hidden;
-}
-
-.chat-area {
-  flex: 1; /* Takes remaining space */
-  min-height: 0; /* Crucial for scrolling inside flex item */
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar-area {
-  width: 100%; /* Full width */
-  height: 200px; /* Fixed height for history */
-  flex-shrink: 0;
-  border-top: 1px solid #ddd;
-}
-
-/* Remove the previous media query since this is now the default */
-@media (max-width: 768px) {
-  .sidebar-area {
-    height: 180px; /* Slightly smaller on mobile if needed */
-  }
-}
+/* Any truly global styles that apply regardless of the mode can go here */
