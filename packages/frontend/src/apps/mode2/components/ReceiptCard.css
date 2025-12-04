@@ -1,0 +1,71 @@
+.swipe-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  margin-bottom: 10px; /* Replaces gap in grid for mobile view */
+}
+
+.delete-background {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  background-color: #dc3545;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 20px;
+  color: white;
+  font-weight: bold;
+  border-radius: 12px;
+  z-index: 0;
+}
+
+.receipt-card {
+  position: relative;
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 15px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  z-index: 1; /* Sit above background */
+  /* Ensure user select is none for better swipe feel */
+  user-select: none; 
+}
+
+/* Reuse existing styles inside the card */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.store-name {
+  font-weight: bold;
+  font-size: 1.1em;
+  color: #2c3e50;
+}
+
+.receipt-date {
+  color: #888;
+  font-size: 0.9em;
+}
+
+.card-amount {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #28a745;
+  text-align: right;
+}
+
+.card-category {
+  display: inline-block;
+  background-color: #e9ecef;
+  color: #495057;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  margin-top: 8px;
+}

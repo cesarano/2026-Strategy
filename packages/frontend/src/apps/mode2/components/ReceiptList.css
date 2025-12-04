@@ -1,0 +1,34 @@
+.receipt-grouped-list {
+  padding-bottom: 20px;
+}
+
+.receipt-group {
+  margin-bottom: 30px;
+}
+
+.group-header {
+  font-size: 1.2rem;
+  color: #555;
+  margin-bottom: 15px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid #eee;
+  position: sticky;
+  top: 0;
+  background-color: #f8f9fa; /* Match app background */
+  z-index: 10;
+  padding-top: 10px;
+}
+
+.group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+@media (max-width: 768px) {
+  .group-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+}

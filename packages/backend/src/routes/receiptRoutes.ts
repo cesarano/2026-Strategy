@@ -82,4 +82,19 @@ router.post('/', upload.single('receiptImage'), async (req: Request, res: Respon
   }
 });
 
+// DELETE /api/receipts/:id - Delete a receipt
+router.delete('/:id', async (req: Request, res: Response) => {
+  try {
+    const success = await persistenceService.deleteReceipt(req.params.id);
+    if (success) {
+      res.status(200).json({ message: 'Receipt deleted successfully' });
+    } else {
+      res.status(404).json({ error: 'Receipt not found' });
+    }
+  } catch (error) {
+    console.error('Error deleting receipt:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

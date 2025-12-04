@@ -37,3 +37,7 @@ export const uploadReceipt = async (file: File): Promise<ReceiptData> => {
   });
   return response.data;
 };
+
+export const deleteReceipt = async (id: string): Promise<void> => {
+  await axios.delete(`${API_BASE_URL}/${id}`);
+};

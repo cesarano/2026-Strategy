@@ -1,15 +1,24 @@
 # 2026-Strategy Project: Development Status & Roadmap
 
 **Date:** Thursday, 4 December 2025
-**Status:** Active Development
+**Status:** Active Development - v0.2.1
 
 ## 🚀 Accomplishments
 
 We have successfully built a functional **multi-mode AI Assistant** featuring a Strategy Planner and a **Smart Receipt Scanner**.
 
-### 1. **Application Architecture**
+### v0.2.1 - Receipt Management (Stable)
+*   **Manage & Edit:** Introduced an "Edit" workflow for receipts. Clicking the pencil icon opens a modal to manage the receipt.
+*   **Delete Capability:** Full backend and frontend support for deleting receipts (cleans up JSON and Images).
+*   **Stability:** Rolled back experimental Swipe/Calendar features to ensure a robust mobile experience.
+
+### v0.2.0 - Core Features
 *   **Multi-App Shell:** Implemented a top-level `App.tsx` shell that manages global state (Mode) and conditionally renders distinct sub-applications.
 *   **Strategy App:** Isolated the original "Strategy AI" logic into `apps/strategy/`.
+*   **Smart Receipt Scanner (Mode 2):**
+    *   **Mobile-First:** Camera integration.
+    *   **AI Extraction:** Gemini Vision parsing.
+    *   **Persistence:** Local storage for data/images.
 *   **Receipt Scanner (Mode 2):** A fully functional mobile-first receipt scanning application in `apps/mode2/`.
 
 ### 2. **Receipt Scanner (New Feature)**

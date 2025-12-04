@@ -68,4 +68,42 @@ export class ReceiptPersistenceService {
       return null;
     }
   }
+
+  async deleteReceipt(id: string): Promise<boolean> {
+    try {
+      // 1. Get receipt to find the image path
+      const receipt = await this.getReceipt(id);
+      if (!receipt) return false;
+
+      // 2. Delete JSON file
+      const jsonPath = path.join(this.dataDir, `${id}.json`);
+      await fs.unlink(jsonPath);
+
+      // 3. Delete Image file
+      if (receipt.imageUrl) {
+        // receipt.imageUrl is like "/uploads/receipts/filename.jpg"
+        // We need to resolve this relative to project root
+        // The imageUrl starts with a slash, so we strip it or handle it.
+        // process.cwd() is usually the package root or project root.
+        // backend runs from packages/backend usually, but let's be safe.
+        // based on previous file uploads: path.join(process.cwd(), 'uploads', 'receipts')
+        
+        // If imageUrl is "/uploads/receipts/xyz.jpg", we can just join it with process.cwd() removing the leading slash
+        const relativePath = receipt.imageUrl.startsWith('/') ? receipt.imageUrl.slice(1) : receipt.imageUrl;
+        const imagePath = path.join(process.cwd(), relativePath);
+        
+        try {
+          await fs.unlink(imagePath);
+        } catch (imgErr) {
+          console.warn(`Failed to delete image at ${imagePath}`, imgErr);
+          // We don't fail the whole operation if image delete fails (maybe already gone)
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error(`Error deleting receipt ${id}:`, error);
+      return false;
+    }
+  }
 }

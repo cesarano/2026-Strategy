@@ -330,3 +330,16 @@ To build the user interface for Mode 2. This included a camera-ready upload butt
 
 **Reason:**
 To prevent the backend server from crashing/restarting loop when an image is uploaded. Configured `nodemon` to ignore the `uploads` and `data` directories.
+
+---
+
+### Receipt Scanner UI Enhancements (Rolled Back & Refined)
+
+**Command:** `npm install date-fns react-datepicker react-swipeable @types/react-datepicker --workspace=packages/frontend` (Installed but currently unused)
+**Modification:** `packages/backend/src/routes/receiptRoutes.ts` (Added DELETE endpoint)
+**Modification:** `packages/backend/src/services/persistence/ReceiptPersistenceService.ts` (Added deleteReceipt)
+**Modification:** `packages/frontend/src/apps/mode2/Mode2App.tsx` (Added Edit/Manage Modal)
+**Modification:** `packages/frontend/src/apps/mode2/Mode2App.css` (Styled Edit Button & Modal)
+
+**Reason:**
+To enhance receipt management. Added backend support for deletion. Implemented an "Edit" workflow in the frontend where users can open a modal to manage (delete) receipts. Rolled back complex swipe/calendar features to resolve stability issues.

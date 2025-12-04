@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { getReceipts, uploadReceipt, type ReceiptData } from '../../services/receiptService';
+import { getReceipts, uploadReceipt, deleteReceipt, type ReceiptData } from '../../services/receiptService';
 import './Mode2App.css';
 
 export const Mode2App: React.FC = () => {
@@ -7,6 +7,7 @@ export const Mode2App: React.FC = () => {
   const [filteredReceipts, setFilteredReceipts] = useState<ReceiptData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedReceipt, setSelectedReceipt] = useState<ReceiptData | null>(null);
+  const [editingReceipt, setEditingReceipt] = useState<ReceiptData | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -45,15 +46,31 @@ export const Mode2App: React.FC = () => {
     try {
       const newReceipt = await uploadReceipt(file);
       setReceipts(prev => [newReceipt, ...prev]);
-      setSelectedReceipt(newReceipt); // Auto-open the result
+      setSelectedReceipt(newReceipt);
     } catch (error) {
       console.error('Upload failed', error);
       alert('Failed to process receipt. Please try again.');
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {
-        fileInputRef.current.value = ''; // Reset input
+        fileInputRef.current.value = '';
       }
+    }
+  };
+
+  const handleDeleteReceipt = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this receipt?')) return;
+
+    try {
+      await deleteReceipt(id);
+      setReceipts(prev => prev.filter(r => r.id !== id));
+      
+      if (selectedReceipt?.id === id) setSelectedReceipt(null);
+      if (editingReceipt?.id === id) setEditingReceipt(null);
+
+    } catch (error) {
+      console.error('Delete failed', error);
+      alert('Failed to delete receipt.');
     }
   };
 
@@ -113,7 +130,19 @@ export const Mode2App: React.FC = () => {
             >
               <div className="card-header">
                 <span className="store-name">{receipt.storeName || 'Unknown Store'}</span>
-                <span className="receipt-date">{receipt.date}</span>
+                <div className="card-header-right">
+                    <span className="receipt-date">{receipt.date}</span>
+                    <button 
+                        className="icon-btn edit-btn-small"
+                        title="Edit"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingReceipt(receipt);
+                        }}
+                    >
+                        ✏️
+                    </button>
+                </div>
               </div>
               <div className="card-amount">
                 {formatCurrency(receipt.totalAmount, receipt.currency)}
@@ -125,6 +154,32 @@ export const Mode2App: React.FC = () => {
           ))
         )}
       </div>
+
+      {/* Manage/Edit Modal */}
+      {editingReceipt && (
+        <div className="receipt-detail-overlay" onClick={() => setEditingReceipt(null)}>
+           <div className="receipt-manage-modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>Manage Receipt</h3>
+                <button className="close-btn" onClick={() => setEditingReceipt(null)}>&times;</button>
+              </div>
+              <div className="modal-body">
+                 <p><strong>Store:</strong> {editingReceipt.storeName}</p>
+                 <p><strong>Amount:</strong> {formatCurrency(editingReceipt.totalAmount, editingReceipt.currency)}</p>
+                 
+                 <div className="manage-actions">
+                    <button className="action-btn coming-soon-btn" disabled>Edit Details (Coming Soon)</button>
+                    <button 
+                        className="action-btn delete-btn-large"
+                        onClick={() => handleDeleteReceipt(editingReceipt.id)}
+                    >
+                        Delete Receipt
+                    </button>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
 
       {selectedReceipt && (
         <div className="receipt-detail-overlay" onClick={() => setSelectedReceipt(null)}>
@@ -191,6 +246,18 @@ export const Mode2App: React.FC = () => {
                   ) : (
                     <p style={{ color: '#888', fontSize: '0.9em' }}>No items extracted.</p>
                   )}
+                </div>
+
+                <div className="info-group" style={{marginTop: '20px', textAlign: 'center'}}>
+                    <button 
+                        className="action-btn edit-btn-large"
+                        onClick={() => {
+                            setSelectedReceipt(null);
+                            setEditingReceipt(selectedReceipt);
+                        }}
+                    >
+                        Manage / Edit
+                    </button>
                 </div>
               </div>
             </div>

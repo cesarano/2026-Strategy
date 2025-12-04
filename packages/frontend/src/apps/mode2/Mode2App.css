@@ -82,18 +82,45 @@
 .card-header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 10px;
+}
+
+.card-header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
 }
 
 .store-name {
   font-weight: bold;
   font-size: 1.1em;
   color: #2c3e50;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%;
 }
 
 .receipt-date {
   color: #888;
   font-size: 0.9em;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    font-size: 1.1em;
+}
+
+.edit-btn-small:hover {
+    background-color: #e3f2fd;
+    color: #007bff;
 }
 
 .card-amount {
@@ -113,7 +140,7 @@
   margin-top: 8px;
 }
 
-/* Detail View */
+/* Detail & Manage Modals */
 .receipt-detail-overlay {
   position: fixed;
   top: 0;
@@ -140,12 +167,27 @@
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
+.receipt-manage-modal {
+  background: white;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
 .modal-header {
   padding: 15px 20px;
   border-bottom: 1px solid #eee;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.modal-body {
+    padding: 20px;
 }
 
 .close-btn {
@@ -230,6 +272,51 @@
 
 .price-col {
   text-align: right;
+}
+
+/* Action Buttons */
+.manage-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.action-btn {
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+    width: 100%;
+    border: 1px solid transparent;
+}
+
+.delete-btn-large {
+    background-color: white;
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.delete-btn-large:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+.edit-btn-large {
+    background-color: #007bff;
+    color: white;
+}
+
+.edit-btn-large:hover {
+    background-color: #0056b3;
+}
+
+.coming-soon-btn {
+    background-color: #f8f9fa;
+    color: #999;
+    border-color: #eee;
+    cursor: not-allowed;
 }
 
 @media (max-width: 768px) {

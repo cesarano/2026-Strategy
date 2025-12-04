@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2025-12-04
+
+### Added
+- **Receipt Management:**
+  - Added "Manage Receipt" modal workflow.
+  - Implemented Delete Receipt functionality in Frontend and Backend.
+  - Replaced direct Delete action with an Edit/Manage menu for future extensibility.
+
+### Changed
+- **UI Enhancements:**
+  - Updated Receipt Card with "Edit" (pencil) icon.
+  - Improved mobile styling for action buttons.
+- **Stability:**
+  - Temporarily rolled back complex "Swipe to Delete" and "Calendar" features to resolve a blank screen crash on mobile.
+  - Focused on stable, button-based interactions.
+
 ## [0.2.0] - 2025-12-04
 
 ### Added
