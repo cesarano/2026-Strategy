@@ -343,3 +343,13 @@ To prevent the backend server from crashing/restarting loop when an image is upl
 
 **Reason:**
 To enhance receipt management. Added backend support for deletion. Implemented an "Edit" workflow in the frontend where users can open a modal to manage (delete) receipts. Rolled back complex swipe/calendar features to resolve stability issues.
+
+---
+
+### Grouping & Thumbnails (v0.2.2)
+
+**Modification:** `packages/frontend/src/apps/mode2/Mode2App.tsx` (Native Grouping Logic, Thumbnail rendering)
+**Modification:** `packages/frontend/src/apps/mode2/Mode2App.css` (Group headers, Flex card layout)
+
+**Reason:**
+To improve organization and visual scanning of receipts. Re-implemented Day/Month/Year grouping using stable native JS (avoiding external library crashes). Added thumbnails to receipt cards for better UX.

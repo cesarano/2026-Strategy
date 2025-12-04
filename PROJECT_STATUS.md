@@ -1,11 +1,15 @@
 # 2026-Strategy Project: Development Status & Roadmap
 
 **Date:** Thursday, 4 December 2025
-**Status:** Active Development - v0.2.1
+**Status:** Active Development - v0.2.2
 
 ## 🚀 Accomplishments
 
 We have successfully built a functional **multi-mode AI Assistant** featuring a Strategy Planner and a **Smart Receipt Scanner**.
+
+### v0.2.2 - Visuals & Organization
+*   **Grouping:** Native implementation of Day/Month/Year grouping for receipts.
+*   **Visuals:** Added thumbnail previews to receipt cards.
 
 ### v0.2.1 - Receipt Management (Stable)
 *   **Manage & Edit:** Introduced an "Edit" workflow for receipts. Clicking the pencil icon opens a modal to manage the receipt.

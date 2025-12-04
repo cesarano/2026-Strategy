@@ -9,6 +9,7 @@ export const Mode2App: React.FC = () => {
   const [selectedReceipt, setSelectedReceipt] = useState<ReceiptData | null>(null);
   const [editingReceipt, setEditingReceipt] = useState<ReceiptData | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [viewMode, setViewMode] = useState<'day' | 'month' | 'year'>('day');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -86,17 +87,63 @@ export const Mode2App: React.FC = () => {
     }
   };
 
+  // Native Grouping Logic
+  const getGroupKey = (dateStr: string | null) => {
+    if (!dateStr) return 'Unknown Date';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'Unknown Date';
+
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+
+    if (viewMode === 'day') return `${yyyy}-${mm}-${dd}`;
+    if (viewMode === 'month') return `${yyyy}-${mm}`;
+    if (viewMode === 'year') return `${yyyy}`;
+    return 'Unknown Date';
+  };
+
+  const groupedReceipts: Record<string, ReceiptData[]> = {};
+  filteredReceipts.forEach(r => {
+    const key = getGroupKey(r.date || r.createdAt);
+    if (!groupedReceipts[key]) groupedReceipts[key] = [];
+    groupedReceipts[key].push(r);
+  });
+
+  // Sort keys descending (newest first)
+  const sortedGroupKeys = Object.keys(groupedReceipts).sort().reverse();
+
   return (
     <div className="receipt-app-container">
       <div className="receipt-header">
-        <h2>My Receipts</h2>
-        <button 
-          className="scan-btn" 
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-        >
-          {isUploading ? 'Processing...' : '📷 Scan Receipt'}
-        </button>
+        <div className="header-top">
+            <h2>My Receipts</h2>
+            <button 
+            className="scan-btn" 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            >
+            {isUploading ? 'Processing...' : '📷 Scan Receipt'}
+            </button>
+        </div>
+        
+        <div className="header-controls">
+            <div className="view-toggles">
+                <button 
+                    className={`toggle-btn ${viewMode === 'day' ? 'active' : ''}`}
+                    onClick={() => setViewMode('day')}
+                >Day</button>
+                <button 
+                    className={`toggle-btn ${viewMode === 'month' ? 'active' : ''}`}
+                    onClick={() => setViewMode('month')}
+                >Month</button>
+                <button 
+                    className={`toggle-btn ${viewMode === 'year' ? 'active' : ''}`}
+                    onClick={() => setViewMode('year')}
+                >Year</button>
+            </div>
+        </div>
+
         <input 
           type="file" 
           ref={fileInputRef}
@@ -116,40 +163,59 @@ export const Mode2App: React.FC = () => {
         />
       </div>
 
-      <div className="receipt-list">
+      <div className="receipt-list-container">
         {filteredReceipts.length === 0 ? (
-          <p style={{ color: '#888', textAlign: 'center', gridColumn: '1/-1' }}>
+          <p style={{ color: '#888', textAlign: 'center', marginTop: '40px' }}>
             {receipts.length === 0 ? "No receipts yet. Scan one!" : "No matches found."}
           </p>
         ) : (
-          filteredReceipts.map(receipt => (
-            <div 
-              key={receipt.id} 
-              className="receipt-card"
-              onClick={() => setSelectedReceipt(receipt)}
-            >
-              <div className="card-header">
-                <span className="store-name">{receipt.storeName || 'Unknown Store'}</span>
-                <div className="card-header-right">
-                    <span className="receipt-date">{receipt.date}</span>
-                    <button 
-                        className="icon-btn edit-btn-small"
-                        title="Edit"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingReceipt(receipt);
-                        }}
-                    >
-                        ✏️
-                    </button>
+          sortedGroupKeys.map(groupKey => (
+            <div key={groupKey} className="receipt-group">
+                <h3 className="group-header">{groupKey}</h3>
+                <div className="receipt-list">
+                    {groupedReceipts[groupKey].map(receipt => (
+                        <div 
+                        key={receipt.id} 
+                        className="receipt-card"
+                        onClick={() => setSelectedReceipt(receipt)}
+                        >
+                        <div className="card-thumbnail-container">
+                            <img 
+                                src={receipt.imageUrl} 
+                                alt="Thumbnail" 
+                                className="card-thumbnail"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none'; // Hide broken images
+                                }} 
+                            />
+                        </div>
+                        <div className="card-content">
+                            <div className="card-header">
+                                <span className="store-name">{receipt.storeName || 'Unknown Store'}</span>
+                                <div className="card-header-right">
+                                    <span className="receipt-date">{receipt.date}</span>
+                                    <button 
+                                        className="icon-btn edit-btn-small"
+                                        title="Edit"
+                                        onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditingReceipt(receipt);
+                                        }}
+                                    >
+                                        ✏️
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="card-amount">
+                                {formatCurrency(receipt.totalAmount, receipt.currency)}
+                            </div>
+                            {receipt.category && (
+                                <span className="card-category">{receipt.category}</span>
+                            )}
+                        </div>
+                        </div>
+                    ))}
                 </div>
-              </div>
-              <div className="card-amount">
-                {formatCurrency(receipt.totalAmount, receipt.currency)}
-              </div>
-              {receipt.category && (
-                <span className="card-category">{receipt.category}</span>
-              )}
             </div>
           ))
         )}

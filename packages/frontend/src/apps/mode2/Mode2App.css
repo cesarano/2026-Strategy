@@ -10,14 +10,71 @@
 
 .receipt-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 15px;
   margin-bottom: 20px;
 }
 
-.receipt-header h2 {
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-top h2 {
   margin: 0;
   color: #333;
+}
+
+.header-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.view-toggles {
+    display: flex;
+    background: #eee;
+    border-radius: 20px;
+    padding: 4px;
+}
+
+.toggle-btn {
+    background: transparent;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.9em;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.toggle-btn.active {
+    background: white;
+    color: #007bff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-weight: 600;
+}
+
+/* Calendar Button (Disabled for now visually if unused, but style kept) */
+.calendar-btn {
+    background: #eee;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.calendar-btn.active {
+    background: #007bff;
+    color: white;
 }
 
 .scan-btn {
@@ -56,22 +113,55 @@
   box-sizing: border-box;
 }
 
+.receipt-list-container {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Grouping Styles */
+.receipt-group {
+  margin-bottom: 25px;
+}
+
+.group-header {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 10px;
+  padding-left: 5px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  background: #f8f9fa; /* Match background to cover scrolling items */
+  z-index: 5;
+}
+
 .receipt-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 15px;
-  overflow-y: auto;
-  padding-bottom: 20px;
+  padding-bottom: 5px;
 }
 
+.empty-state {
+    text-align: center;
+    color: #888;
+    margin-top: 40px;
+}
+
+/* Updated Card Styles with Thumbnail */
 .receipt-card {
   background: white;
   border: 1px solid #eee;
   border-radius: 12px;
-  padding: 15px;
+  padding: 10px; /* Reduced padding slightly */
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  display: flex; /* Flex layout for Image + Content */
+  align-items: center;
+  gap: 15px;
 }
 
 .receipt-card:hover {
@@ -79,11 +169,36 @@
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
+.card-thumbnail-container {
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Prevent text spill */
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .card-header-right {
@@ -100,12 +215,12 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 60%;
+  max-width: 100%;
 }
 
 .receipt-date {
   color: #888;
-  font-size: 0.9em;
+  font-size: 0.85em;
 }
 
 .icon-btn {
@@ -124,20 +239,20 @@
 }
 
 .card-amount {
-  font-size: 1.2em;
+  font-size: 1.1em;
   font-weight: bold;
   color: #28a745;
-  text-align: right;
 }
 
 .card-category {
   display: inline-block;
   background-color: #e9ecef;
   color: #495057;
-  padding: 4px 8px;
+  padding: 2px 6px;
   border-radius: 4px;
-  font-size: 0.8em;
-  margin-top: 8px;
+  font-size: 0.75em;
+  margin-top: 5px;
+  align-self: flex-start;
 }
 
 /* Detail & Manage Modals */
