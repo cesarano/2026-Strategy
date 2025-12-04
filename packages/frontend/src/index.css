@@ -1,3 +1,7 @@
+html {
+  height: 100%;
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -24,10 +28,10 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  /* Removed display: flex and place-items: center to allow app to control its own layout */
+  display: block;
   min-width: 320px;
-  min-height: 100vh;
+  min-height: 100vh; /* Keep 100vh for body to ensure full viewport height */
 }
 
 h1 {

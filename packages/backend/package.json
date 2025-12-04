@@ -1,11 +1,11 @@
 {
   "name": "backend",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "dev": "nodemon src/index.ts"
+    "dev": "nodemon"
   },
   "keywords": [],
   "author": "",

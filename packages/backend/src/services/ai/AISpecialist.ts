@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, Part, GenerationConfig } from '@google/generative-ai';
 const pdf = require('pdf-parse');
 
 export interface AIRequest {
@@ -10,6 +10,7 @@ export interface AIRequest {
     buffer?: Buffer;
     mimeType: string;
   }[];
+  generationConfig?: GenerationConfig;
 }
 
 export interface AIResponse {
@@ -19,7 +20,7 @@ export interface AIResponse {
 
 /**
  * The AISpecialist agent responsible for handling AI-related tasks.
- * Supports text-only and multimodal inputs (currently parsing PDFs for text content).
+ * Supports text-only and multimodal inputs (images, PDFs).
  */
 export class AISpecialist {
   private genAI: GoogleGenerativeAI | null = null;
@@ -56,24 +57,6 @@ MERMAID BEST PRACTICES & SYNTAX RULES:
 6. STYLING:
    - Use \`classDef\` for shared styles.
    - Example: \`classDef cloud fill:#eef,stroke:#333; class node1,node2 cloud;\`
-
-EXAMPLE (CORRECT):
-\`\`\`mermaid
-flowchart TD
-  subgraph cloud [Cloud Environment]
-    node1["Web Server"]
-    node2["Database"]
-  end
-  user["User Device"] --> node1
-  node1 --> node2
-  classDef box fill:#fff,stroke:#333;
-  class node1,node2 box;
-\`\`\`
-
-EXAMPLE (INCORRECT - DO NOT USE):
-- \`graph TD\` (Use flowchart)
-- \`subgraph Cloud Env ["Cloud Environment"]\` (No quotes in subgraph label brackets)
-- \`user --> cloud\` (Do not link to subgraph ID)
 ` 
       });
     } else {
@@ -87,28 +70,44 @@ EXAMPLE (INCORRECT - DO NOT USE):
    * @returns A promise resolving to the AI's response.
    */
   async processRequest(request: AIRequest): Promise<AIResponse> {
-    let enrichedPrompt = request.prompt;
-    const fileContents: string[] = [];
+    const parts: Part[] = [];
+    
+    // 1. Add the main prompt
+    let mainPrompt = request.prompt;
+    if (request.context) {
+      mainPrompt += `\n\nAdditional Context:\n${JSON.stringify(request.context, null, 2)}`;
+    }
+    parts.push({ text: mainPrompt });
 
+    // 2. Process files
+    let filesProcessed = 0;
     if (request.files && request.files.length > 0) {
       for (const file of request.files) {
         const sourceName = file.path || 'uploaded-file';
+        
         try {
-          const content = await this.extractTextFromFile(file, file.mimeType);
-          fileContents.push(`--- Start of file: ${sourceName} ---\n${content}\n--- End of file ---`);
+          if (file.mimeType.startsWith('image/')) {
+            // Handle Images (Multimodal)
+            const buffer = file.buffer || (file.path ? fs.readFileSync(file.path) : null);
+            if (!buffer) throw new Error('No image data found');
+            
+            parts.push({
+              inlineData: {
+                data: buffer.toString('base64'),
+                mimeType: file.mimeType
+              }
+            });
+          } else {
+             // Handle Text/PDF (Extract text and append)
+            const content = await this.extractTextFromFile(file, file.mimeType);
+            parts.push({ text: `\n\n--- Start of file: ${sourceName} ---\n${content}\n--- End of file ---` });
+          }
+          filesProcessed++;
         } catch (error) {
           console.error(`Failed to process file ${sourceName}:`, error);
-          fileContents.push(`[Error reading file: ${sourceName}]`);
+          parts.push({ text: `\n[Error reading file: ${sourceName}]` });
         }
       }
-    }
-
-    if (fileContents.length > 0) {
-      enrichedPrompt += `\n\nContext from attached files:\n${fileContents.join('\n\n')}`;
-    }
-
-    if (request.context) {
-        enrichedPrompt += `\n\nAdditional Context:\n${JSON.stringify(request.context, null, 2)}`;
     }
 
     let responseContent: string;
@@ -116,16 +115,19 @@ EXAMPLE (INCORRECT - DO NOT USE):
 
     if (this.model) {
       try {
-        const result = await this.model.generateContent(enrichedPrompt);
+        const result = await this.model.generateContent({
+          contents: [{ role: 'user', parts }],
+          generationConfig: request.generationConfig
+        });
         const response = await result.response;
         responseContent = response.text();
         modelName = 'gemini-2.0-flash';
       } catch (error) {
         console.error('Error generating content with Gemini:', error);
-        responseContent = `[Error interacting with AI Provider]. Falling back to mock. \n\n` + this.simulateAIResponse(enrichedPrompt);
+        responseContent = `[Error interacting with AI Provider]. Falling back to mock. \n\n` + this.simulateAIResponse(request.prompt);
       }
     } else {
-      responseContent = this.simulateAIResponse(enrichedPrompt);
+      responseContent = this.simulateAIResponse(request.prompt);
     }
 
     return {
@@ -133,7 +135,7 @@ EXAMPLE (INCORRECT - DO NOT USE):
       metadata: {
         timestamp: new Date().toISOString(),
         model: modelName,
-        filesProcessed: request.files?.length || 0,
+        filesProcessed: filesProcessed,
       },
     };
   }

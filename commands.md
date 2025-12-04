@@ -283,3 +283,50 @@ To save chat history. A `FilePersistenceService` was created to store chat sessi
 
 **Reason:**
 Downgraded `uuid` to version 9 to resolve an ECMAScript Module (ESM) compatibility issue with Jest, which was causing test failures with the default export of version 11+.
+
+---
+
+### Improving Chat History Layout
+
+**Modification:** `packages/frontend/src/apps/strategy/StrategyApp.tsx`
+**Modification:** `packages/frontend/src/apps/strategy/StrategyApp.css`
+**Modification:** `packages/frontend/src/index.css`
+
+**Reason:**
+To move the Chat History to the bottom of the screen and adjust the application layout for better mobile usability, ensuring the chat window and history share the vertical space effectively.
+
+---
+
+### Implementing Receipt Scanner (Mode 2)
+
+**Directories:** `mkdir -p packages/backend/data/receipts packages/backend/uploads/receipts`
+**File:** `packages/backend/src/services/persistence/ReceiptPersistenceService.ts`
+**File:** `packages/backend/src/services/ai/ReceiptProcessor.ts`
+**File:** `packages/backend/src/routes/receiptRoutes.ts`
+**Modification:** `packages/backend/src/services/ai/AISpecialist.ts` (Multimodal support)
+**Modification:** `packages/backend/src/index.ts` (Static files & Routes)
+
+**Reason:**
+To implement the backend infrastructure for the Smart Receipt Scanner. This involved creating storage for receipt images and data, a specialized AI processor for extracting JSON from images, and API endpoints to handle uploads and retrieval.
+
+---
+
+### Frontend Receipt Scanner UI
+
+**File:** `packages/frontend/src/services/receiptService.ts`
+**File:** `packages/frontend/src/apps/mode2/Mode2App.tsx`
+**File:** `packages/frontend/src/apps/mode2/Mode2App.css`
+**Modification:** `packages/frontend/vite.config.ts` (Added `/uploads` proxy)
+
+**Reason:**
+To build the user interface for Mode 2. This included a camera-ready upload button, a searchable gallery of receipts, and a detailed view for inspecting extracted data. The Vite config was updated to proxy image requests to the backend.
+
+---
+
+### Configuring Nodemon
+
+**File:** `packages/backend/nodemon.json`
+**Modification:** `packages/backend/package.json`
+
+**Reason:**
+To prevent the backend server from crashing/restarting loop when an image is uploaded. Configured `nodemon` to ignore the `uploads` and `data` directories.

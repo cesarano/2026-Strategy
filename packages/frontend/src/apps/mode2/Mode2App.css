@@ -1,18 +1,244 @@
-/* Styles for Mode2App (Placeholder) */
-.mode2-app-container {
-    padding: 20px;
-    background-color: #f0f8ff; /* AliceBlue */
-    border: 2px dashed #007bff;
-    border-radius: 8px;
-    margin-top: 20px;
-    text-align: center;
-    min-height: 400px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+.receipt-app-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-.mode2-app-container h2 {
-    color: #0056b3;
+.receipt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.receipt-header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.scan-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+}
+
+.scan-btn:hover {
+  background-color: #0056b3;
+}
+
+.scan-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.search-bar {
+  margin-bottom: 20px;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.receipt-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+  overflow-y: auto;
+  padding-bottom: 20px;
+}
+
+.receipt-card {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 15px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.receipt-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.store-name {
+  font-weight: bold;
+  font-size: 1.1em;
+  color: #2c3e50;
+}
+
+.receipt-date {
+  color: #888;
+  font-size: 0.9em;
+}
+
+.card-amount {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #28a745;
+  text-align: right;
+}
+
+.card-category {
+  display: inline-block;
+  background-color: #e9ecef;
+  color: #495057;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  margin-top: 8px;
+}
+
+/* Detail View */
+.receipt-detail-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.receipt-detail-modal {
+  background: white;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+.modal-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.receipt-image-container {
+  flex: 1;
+  background-color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.receipt-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.receipt-info {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background-color: #fff;
+  min-width: 300px;
+}
+
+.info-group {
+  margin-bottom: 20px;
+}
+
+.info-label {
+  font-size: 0.85em;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+}
+
+.info-value {
+  font-size: 1.1em;
+  color: #333;
+}
+
+.amount-large {
+  font-size: 2em;
+  color: #28a745;
+  font-weight: bold;
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.items-table th {
+  text-align: left;
+  color: #888;
+  font-weight: normal;
+  font-size: 0.9em;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.items-table td {
+  padding: 8px 0;
+  border-bottom: 1px solid #f9f9f9;
+}
+
+.price-col {
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    flex-direction: column;
+  }
+  
+  .receipt-image-container {
+    height: 300px;
+    flex: none;
+  }
 }

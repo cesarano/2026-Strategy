@@ -35,13 +35,11 @@ export const StrategyApp: React.FC = () => {
             onSessionCreated={handleSessionSelect}
           />
         </div>
-        <div className="sidebar-area">
-          <ChatHistory 
-            onSelectSession={handleSessionSelect} 
-            currentSessionId={currentSessionId}
-            refreshTrigger={historyRefreshTrigger}
-          />
-        </div>
+        <ChatHistory 
+          onSelectSession={handleSessionSelect} 
+          currentSessionId={currentSessionId}
+          refreshTrigger={historyRefreshTrigger}
+        />
       </main>
     </div>
   );

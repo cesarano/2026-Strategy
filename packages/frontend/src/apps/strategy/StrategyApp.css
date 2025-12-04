@@ -56,16 +56,19 @@ h1 {
   flex-direction: column;
 }
 
-.sidebar-area {
-  width: 100%; /* Full width */
-  height: 200px; /* Fixed height for history */
-  flex-shrink: 0;
+/* Styling for the ChatHistory component directly within main-content */
+.chat-history {
+  width: 100%; /* Ensure it takes full width */
+  height: 200px; /* Fixed height for history at the bottom */
+  flex-shrink: 0; /* Prevent it from shrinking */
   border-top: 1px solid #ddd;
+  background-color: #f8f9fa; /* Apply background color here directly */
+  display: flex;
+  flex-direction: column;
 }
 
-/* Remove the previous media query since this is now the default */
 @media (max-width: 768px) {
-  .sidebar-area {
+  .chat-history {
     height: 180px; /* Slightly smaller on mobile if needed */
   }
 }

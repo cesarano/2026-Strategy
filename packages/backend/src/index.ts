@@ -2,14 +2,20 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express, { Express, Request, Response } from 'express';
+import path from 'path';
 import aiRoutes from './routes/aiRoutes';
+import receiptRoutes from './routes/receiptRoutes';
 
 const app: Express = express();
 const port = process.env.PORT || 3001;
 
 app.use(express.json());
 
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
 app.use('/api/ai', aiRoutes);
+app.use('/api/receipts', receiptRoutes);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello from the backend!');

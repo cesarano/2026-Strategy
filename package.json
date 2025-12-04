@@ -1,7 +1,7 @@
 {
   "name": "2026-strategy",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.2.0",
+  "description": "Strategic Initiative Planning Tool",
   "main": "index.js",
   "workspaces": [
     "packages/*"
