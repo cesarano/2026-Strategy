@@ -496,6 +496,9 @@ export const AIReceiptsApp: React.FC = () => {
                                 (e.target as HTMLImageElement).style.backgroundColor = '#f0f0f0';
                             }} 
                         />
+                        <p className="image-path-display" style={{ fontSize: '0.8em', color: '#666', wordBreak: 'break-all', marginTop: '5px', textAlign: 'center' }}>
+                            {editingReceipt.displayImageUrl}
+                        </p>
                     </div>
                     <div className="image-version-toggle">
                         <label>

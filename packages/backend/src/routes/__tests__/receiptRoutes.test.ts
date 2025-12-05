@@ -3,8 +3,8 @@ import express from 'express';
 import { readFileSync, promises as fsPromises, PathLike } from 'fs';
 import path from 'path';
 import { ReceiptPersistenceService, ReceiptData } from '../../services/persistence/ReceiptPersistenceService';
-import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid'; // Import uuidv4 for mocking
+import { RECEIPT_STORAGE_PATH } from '../../config'; // Import the new config
 
 // 1. Mock fs/promises BEFORE importing receiptRoutes
 // This ensures that when receiptRoutes is imported, it gets the mocked fs/promises
@@ -14,6 +14,11 @@ jest.mock('fs/promises', () => ({
   mkdir: jest.fn(), // Mock mkdir as well
 }));
 const MockFsPromises = require('fs/promises') as jest.Mocked<typeof fsPromises>;
+
+// Mock the config module to control RECEIPT_STORAGE_PATH
+jest.mock('../../config', () => ({
+  RECEIPT_STORAGE_PATH: '/home/cesarano/storage',
+}));
 
 
 // 2. Mock fs.existsSync for the synchronous call in multer.diskStorage in receiptRoutes.ts
@@ -37,16 +42,9 @@ jest.mock('../../services/persistence/ReceiptPersistenceService');
 const MockReceiptPersistenceService = ReceiptPersistenceService as jest.MockedClass<typeof ReceiptPersistenceService>;
 
 
-// Mock sharp
-jest.mock('sharp', () => {
-  const mockSharpInstance = {
-    resize: jest.fn().mockReturnThis(),
-    jpeg: jest.fn().mockReturnThis(),
-    toBuffer: jest.fn(),
-  };
-  return jest.fn(() => mockSharpInstance);
-});
-const mockSharp = sharp as jest.MockedFunction<typeof sharp>;
+// Mock ImageProcessorService
+jest.mock('../../services/ImageProcessorService');
+const MockImageProcessorService = require('../../services/ImageProcessorService').ImageProcessorService;
 
 const app = express();
 app.use(express.json());
@@ -55,21 +53,13 @@ app.use('/api/receipts', receiptRoutes);
 
 describe('Receipt Routes', () => {
   let mockReceipt: ReceiptData;
-  let currentMockSharpInstance: any; // To hold the instance returned by mockSharp()
 
   beforeEach(() => {
     jest.clearAllMocks(); // Clears all mock states
 
-    // Re-initialize mockSharp's behavior after clearing mocks
-    currentMockSharpInstance = { // Create a fresh mock instance
-      resize: jest.fn().mockReturnThis(),
-      jpeg: jest.fn().mockReturnThis(),
-      toBuffer: jest.fn(),
-    };
-    mockSharp.mockImplementation(() => currentMockSharpInstance); // Make mockSharp return this fresh instance
+    // Default mock for ImageProcessorService.processImage (successful processing)
+    jest.spyOn(MockImageProcessorService.prototype, 'processImage').mockResolvedValue(Buffer.from('processed image data'));
 
-    // Now set global mock behaviors for the fresh instance
-    currentMockSharpInstance.toBuffer.mockResolvedValue(Buffer.from('optimized image data'));
     MockFsPromises.readFile.mockResolvedValue(Buffer.from('original image data'));
     MockFsPromises.writeFile.mockResolvedValue(undefined);
     MockFsPromises.mkdir.mockResolvedValue(undefined); // Mock mkdir as well
@@ -97,31 +87,38 @@ describe('Receipt Routes', () => {
     jest.spyOn(MockReceiptPersistenceService.prototype, 'getAllReceipts').mockResolvedValue([mockReceipt]);
     jest.spyOn(MockReceiptPersistenceService.prototype, 'deleteReceipt').mockResolvedValue(true);
   });
-
   afterEach(() => {
     jest.restoreAllMocks(); // Ensure all spies are restored
   });
 
-  describe('POST /api/receipts/:id/optimize-image', () => {
-    it('should optimize an image and return success', async () => {
+  describe('POST /api/receipts/:id/crop-enhance', () => {
+    const cropEnhanceOptions = {
+      resize: { width: 1024, height: 1024, fit: 'inside', withoutEnlargement: true },
+      format: { type: 'jpeg', options: { quality: 80 } },
+    };
+
+    it('should crop and enhance an image and return success', async () => {
       const response = await request(app)
-        .post(`/api/receipts/${mockReceipt.id}/optimize-image`);
+        .post(`/api/receipts/${mockReceipt.id}/crop-enhance`)
+        .send(cropEnhanceOptions);
 
       expect(response.status).toBe(200);
-      expect(response.body.message).toBe('Image optimized successfully');
-      expect(response.body.displayImageUrl).toBe(`/uploads/receipts/optimized-${mockReceipt.id}-mock-uuid.jpeg`);
+      expect(response.body.message).toBe('Image crop-enhanced successfully');
+      expect(response.body.displayImageUrl).toBe(`/uploads/receipts/crop-enhanced-${mockReceipt.id}-mock-uuid.jpeg`);
 
       expect(MockReceiptPersistenceService.prototype.getReceipt).toHaveBeenCalledWith(mockReceipt.id);
-      expect(MockFsPromises.readFile).toHaveBeenCalledWith(path.join(process.cwd(), 'uploads', 'receipts', 'original-test-image.jpg'));
+      expect(MockFsPromises.readFile).toHaveBeenCalledWith(path.join(RECEIPT_STORAGE_PATH, 'original-test-image.jpg'));
       
-      expect(mockSharp).toHaveBeenCalledWith(Buffer.from('original image data'));
-      expect(currentMockSharpInstance.resize).toHaveBeenCalledWith(1024, 1024, { fit: 'inside', withoutEnlargement: true });
-      expect(currentMockSharpInstance.jpeg).toHaveBeenCalledWith({ quality: 80 });
-      expect(currentMockSharpInstance.toBuffer).toHaveBeenCalled();
-      expect(MockFsPromises.writeFile).toHaveBeenCalledWith(path.join(process.cwd(), 'uploads', 'receipts', `optimized-${mockReceipt.id}-mock-uuid.jpeg`), Buffer.from('optimized image data'));
+      // Verify that ImageProcessorService.processImage is called with the correct arguments
+      expect(MockImageProcessorService.prototype.processImage).toHaveBeenCalledWith(
+        Buffer.from('original image data'), // The buffer read from the file mock
+        cropEnhanceOptions
+      );
+
+      expect(MockFsPromises.writeFile).toHaveBeenCalledWith(path.join(RECEIPT_STORAGE_PATH, `crop-enhanced-${mockReceipt.id}-mock-uuid.jpeg`), Buffer.from('processed image data'));
       expect(MockReceiptPersistenceService.prototype.saveReceipt).toHaveBeenCalledWith(expect.objectContaining({
-        optimizedImageUrl: `/uploads/receipts/optimized-${mockReceipt.id}-mock-uuid.jpeg`,
-        displayImageUrl: `/uploads/receipts/optimized-${mockReceipt.id}-mock-uuid.jpeg`,
+        optimizedImageUrl: `/uploads/receipts/crop-enhanced-${mockReceipt.id}-mock-uuid.jpeg`,
+        displayImageUrl: `/uploads/receipts/crop-enhanced-${mockReceipt.id}-mock-uuid.jpeg`,
       }));
     });
 
@@ -129,7 +126,8 @@ describe('Receipt Routes', () => {
       jest.spyOn(MockReceiptPersistenceService.prototype, 'getReceipt').mockResolvedValue(null);
 
       const response = await request(app)
-        .post(`/api/receipts/${mockReceipt.id}/optimize-image`);
+        .post(`/api/receipts/${mockReceipt.id}/crop-enhance`)
+        .send(cropEnhanceOptions);
 
       expect(response.status).toBe(404);
       expect(response.body.error).toBe('Receipt not found');
@@ -139,20 +137,23 @@ describe('Receipt Routes', () => {
       MockFsSync.existsSync.mockReturnValue(false); // Ensure existsSync is false for this test
 
       const response = await request(app)
-        .post(`/api/receipts/${mockReceipt.id}/optimize-image`);
+        .post(`/api/receipts/${mockReceipt.id}/crop-enhance`)
+        .send(cropEnhanceOptions);
 
       expect(response.status).toBe(404);
       expect(response.body.error).toBe('Original image file not found');
     });
 
-    it('should return 500 on optimization error', async () => {
-      currentMockSharpInstance.toBuffer.mockRejectedValue(new Error('Sharp error'));
+    it('should return 500 on crop-enhance error', async () => {
+      // Mock ImageProcessorService.processImage to throw an error for this specific test
+      jest.spyOn(MockImageProcessorService.prototype, 'processImage').mockRejectedValue(new Error('Image processing error'));
 
       const response = await request(app)
-        .post(`/api/receipts/${mockReceipt.id}/optimize-image`);
+        .post(`/api/receipts/${mockReceipt.id}/crop-enhance`)
+        .send(cropEnhanceOptions);
 
       expect(response.status).toBe(500);
-      expect(response.body.error).toBe('Failed to optimize receipt image');
+      expect(response.body.error).toBe('Failed to crop and enhance receipt image');
     });
   });
 

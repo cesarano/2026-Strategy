@@ -1,11 +1,18 @@
 # 2026-Strategy Project: Development Status & Roadmap
 
 **Date:** Friday, 5 December 2025
-**Status:** Active Development - v0.2.3
+**Status:** Active Development - v0.3.0
 
 ## 🚀 Accomplishments
 
 We have successfully built a functional **multi-mode AI Assistant** featuring a Strategy Planner and a **Smart Receipt Scanner**.
+
+### v0.3.0 - Configurable Storage & Validation (2025-12-05)
+*   **Configurable Storage:** Centralized backend configuration for receipt image storage. The path can now be customized via `RECEIPT_STORAGE_PATH` in `.env`.
+*   **Configuration Safety:** Added logic to fallback to the default path if the environment variable is missing.
+*   **Test Fixes:** Updated backend test suite to correctly test the `crop-enhance` route and respect storage configuration mocks.
+*   **UI Visibility:** Updated the "Manage Receipt" modal to display the file path of the currently viewed image for debugging and verification.
+*   **Note:** This release includes significant configuration changes that have been unit tested but require full end-to-end manual verification in a deployed environment.
 
 ### v0.2.3 - Enhanced Image Management
 *   **Image Versioning:** Implemented storing and toggling between original and optimized receipt images.

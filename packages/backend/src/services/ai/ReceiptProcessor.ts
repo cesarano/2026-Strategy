@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ImageProcessorService, ImageProcessingOptions } from '../ImageProcessorService';
 import path from 'path';
 import fs from 'fs/promises'; // Use fs.promises for async file operations
+import { RECEIPT_STORAGE_PATH } from '../../config';
 
 
 export class ReceiptProcessor {
@@ -70,7 +71,7 @@ export class ReceiptProcessor {
 
       // Save the optimized image to a new file and update receipt
       const optimizedFilename = `crop-enhanced-${receiptId}-${uuidv4()}.jpeg`; // Use jpeg for now, but format can be dynamic
-      const uploadDir = path.join(process.cwd(), 'uploads', 'receipts');
+      const uploadDir = RECEIPT_STORAGE_PATH;
       // Ensure directory exists
       if (!require('fs').existsSync(uploadDir)) {
         await fs.mkdir(uploadDir, { recursive: true });

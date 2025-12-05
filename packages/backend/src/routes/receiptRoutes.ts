@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ReceiptProcessor } from '../services/ai/ReceiptProcessor';
 import { ReceiptPersistenceService, ReceiptData } from '../services/persistence/ReceiptPersistenceService';
 import { ImageProcessingOptions } from '../services/ImageProcessorService'; // Import ImageProcessingOptions
+import { RECEIPT_STORAGE_PATH } from '../config';
 
 const router = Router();
 const receiptProcessor = new ReceiptProcessor();
@@ -14,7 +15,7 @@ const persistenceService = new ReceiptPersistenceService(); // Keep this for oth
 // Configure storage to save files to disk
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => { // Made async to use await for mkdir
-    const uploadDir = path.join(process.cwd(), 'uploads', 'receipts');
+    const uploadDir = RECEIPT_STORAGE_PATH;
     // Ensure directory exists
     if (!require('fs').existsSync(uploadDir)) { // Use synchronous fs for existsSync
       await fs.mkdir(uploadDir, { recursive: true }); // Use fs.promises.mkdir
@@ -126,7 +127,7 @@ router.post('/:id/crop-enhance', async (req: Request, res: Response) => {
 
     // Get the original image path
     const originalFilename = path.basename(receipt.originalImageUrl);
-    const originalImagePath = path.join(process.cwd(), 'uploads', 'receipts', originalFilename);
+    const originalImagePath = path.join(RECEIPT_STORAGE_PATH, originalFilename);
 
     if (!require('fs').existsSync(originalImagePath)) {
       return res.status(404).json({ error: 'Original image file not found' });
@@ -165,7 +166,7 @@ router.get('/:id/download-image', async (req: Request, res: Response) => {
 
     // Use displayImageUrl for download
     const filename = path.basename(receipt.displayImageUrl);
-    const imagePath = path.join(process.cwd(), 'uploads', 'receipts', filename);
+    const imagePath = path.join(RECEIPT_STORAGE_PATH, filename);
 
     const originalFs = require('fs');
     if (!originalFs.existsSync(imagePath)) {
@@ -238,7 +239,6 @@ router.post('/:id/upload-optimized-image', upload.single('optimizedImage'), asyn
 
     const newOptimizedImageUrl = `/uploads/receipts/${filename}`;
 
-    // Update receipt with new optimized image
     receipt.optimizedImageUrl = newOptimizedImageUrl;
     receipt.displayImageUrl = newOptimizedImageUrl;
 

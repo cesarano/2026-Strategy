@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachanglog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-12-05
+
+### Added
+- **Configurable Image Storage:** Introduced `packages/backend/src/config.ts` to handle `RECEIPT_STORAGE_PATH` from `.env`, allowing custom storage locations for receipt images.
+- **UI Debugging:** Added display of the current image path in the "Manage Receipt" modal to verify the storage location.
+
+### Changed
+- **Backend Configuration:** Refactored `receiptRoutes.ts`, `ReceiptProcessor.ts`, and `index.ts` to import the storage path from `config.ts` instead of using hardcoded paths.
+- **Tests:** Updated `receiptRoutes.test.ts` to test the correct endpoint (`crop-enhance` instead of the orphaned `optimize-image`) and to respect the mocked storage configuration.
+
+### Fixed
+- **Test Suite:** Fixed broken tests in `receiptRoutes.test.ts` by renaming the tested route to match the actual API and mocking dependencies (`sharp`, `ImageProcessorService`) correctly.
+
+### Note
+- **Validation Status:** These changes have been unit tested but require full manual verification to ensure the file system permissions and paths behave as expected in the deployment environment.
+
 ## [0.2.4] - 2025-12-05
 
 ### Fixed
