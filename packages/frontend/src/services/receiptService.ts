@@ -1,5 +1,28 @@
 import axios from 'axios';
 
+// Mirror the backend's ImageProcessingOptions for type safety
+export interface ImageProcessingOptions {
+  resize?: {
+      width?: number;
+      height?: number;
+      fit?: 'cover' | 'contain' | 'fill' | 'inside' | 'outside';
+  };
+  crop?: {
+      left: number;
+      top: number;
+      width: number;
+      height: number;
+  };
+  format?: {
+      type: 'jpeg' | 'png' | 'webp' | 'gif' | 'tiff' | 'avif';
+      options?: object; // sharp's format options are complex, keep as object for frontend simplicity
+  };
+  grayscale?: boolean;
+  sharpen?: object | boolean; // sharp.SharpenOptions or true
+  noiseReduction?: number;
+  stripMetadata?: boolean;
+}
+
 export interface ReceiptItem {
   name: string;
   price: number | null;
@@ -44,8 +67,9 @@ export const deleteReceipt = async (id: string): Promise<void> => {
   await axios.delete(`${API_BASE_URL}/${id}`);
 };
 
-export const optimizeReceiptImage = async (id: string): Promise<{ message: string; imageUrl: string }> => {
-  const response = await axios.post(`${API_BASE_URL}/${id}/optimize-image`);
+// Renamed and updated to accept ImageProcessingOptions
+export const cropEnhanceReceiptImage = async (id: string, options: ImageProcessingOptions): Promise<{ message: string; displayImageUrl: string }> => {
+  const response = await axios.post(`${API_BASE_URL}/${id}/crop-enhance`, options);
   return response.data;
 };
 
@@ -57,5 +81,4 @@ export const setDisplayImageVersion = async (id: string, version: 'original' | '
   const response = await axios.post(`${API_BASE_URL}/${id}/set-display-image`, { version });
   return response.data;
 };
-
 

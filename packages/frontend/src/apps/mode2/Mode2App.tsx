@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { getReceipts, uploadReceipt, deleteReceipt, optimizeReceiptImage, downloadReceiptImage, setDisplayImageVersion, type ReceiptData } from '../../services/receiptService';
+import { getReceipts, uploadReceipt, deleteReceipt, cropEnhanceReceiptImage, downloadReceiptImage, setDisplayImageVersion, type ReceiptData, type ImageProcessingOptions } from '../../services/receiptService';
 import './Mode2App.css';
 
 export const Mode2App: React.FC = () => {
@@ -79,19 +79,29 @@ export const Mode2App: React.FC = () => {
   const handleOptimizeImage = async () => {
     if (!editingReceipt) return;
     setIsOptimizingImage(true);
+
+    // Define default image processing options for "Crop & Enhance"
+    // These options can be exposed to the UI later for user configuration.
+    const options: ImageProcessingOptions = {
+      resize: { width: 1024, height: 1024, fit: 'inside' },
+      format: { type: 'jpeg', options: { quality: 80 } },
+      // Other options can be added here if exposed in UI, e.g., grayscale: true, sharpen: true, crop: { ... }
+    };
+
     try {
-      const response = await optimizeReceiptImage(editingReceipt.id);
-      alert('Image optimized successfully!');
+      // Call the renamed service function with options
+      const response = await cropEnhanceReceiptImage(editingReceipt.id, options);
+      alert('Image crop-enhanced successfully!');
       // Update the editingReceipt state with the new optimized image URL
-      setEditingReceipt(prev => prev ? { 
-        ...prev, 
+      setEditingReceipt(prev => prev ? {
+        ...prev,
         optimizedImageUrl: response.displayImageUrl, // Backend returns displayImageUrl as the new optimized one
         displayImageUrl: response.displayImageUrl,
       } : null);
       await loadReceipts(); // Refresh receipts to reflect potential image changes
     } catch (error) {
-      console.error('Image optimization failed:', error);
-      alert('Failed to optimize image. Please try again.');
+      console.error('Image crop-enhancement failed:', error);
+      alert('Failed to crop and enhance image. Please try again.');
     } finally {
       setIsOptimizingImage(false);
     }
@@ -322,6 +332,12 @@ export const Mode2App: React.FC = () => {
                         disabled={isOptimizingImage}
                     >
                         {isOptimizingImage ? 'Optimizing...' : '✨ Crop & Enhance'}
+                    </button>
+                    <button 
+                        className="action-btn coming-soon-btn"
+                        disabled
+                    >
+                        Canify Enhance (Coming Soon)
                     </button>
                     <button 
                         className="action-btn"

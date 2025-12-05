@@ -5,11 +5,11 @@ import fs from 'fs/promises'; // Use fs.promises for async file operations
 import { v4 as uuidv4 } from 'uuid';
 import { ReceiptProcessor } from '../services/ai/ReceiptProcessor';
 import { ReceiptPersistenceService, ReceiptData } from '../services/persistence/ReceiptPersistenceService';
-import sharp from 'sharp'; // Import sharp
+import { ImageProcessingOptions } from '../services/ImageProcessorService'; // Import ImageProcessingOptions
 
 const router = Router();
 const receiptProcessor = new ReceiptProcessor();
-const persistenceService = new ReceiptPersistenceService();
+const persistenceService = new ReceiptPersistenceService(); // Keep this for other routes
 
 // Configure storage to save files to disk
 const storage = multer.diskStorage({
@@ -99,8 +99,8 @@ router.delete('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// POST /api/receipts/:id/optimize-image - Crop and enhance a receipt image
-router.post('/:id/optimize-image', async (req: Request, res: Response) => {
+// POST /api/receipts/:id/crop-enhance - Crop and enhance a receipt image
+router.post('/:id/crop-enhance', async (req: Request, res: Response) => {
   try {
     const receiptId = req.params.id;
     const receipt = await persistenceService.getReceipt(receiptId);
@@ -120,29 +120,21 @@ router.post('/:id/optimize-image', async (req: Request, res: Response) => {
     // Read the original image buffer
     const imageBuffer = await fs.readFile(originalImagePath);
 
-    // Generate a new filename for the optimized image
-    const optimizedFilename = `optimized-${receiptId}-${uuidv4()}.jpeg`;
-    const optimizedImagePath = path.join(process.cwd(), 'uploads', 'receipts', optimizedFilename);
+    // Get image processing options from the request body
+    const options: ImageProcessingOptions = req.body;
 
-    // Optimize and resize using sharp
-    const optimizedBuffer = await sharp(imageBuffer)
-      .resize(1024, 1024, { fit: 'inside', withoutEnlargement: true })
-      .jpeg({ quality: 80 })
-      .toBuffer();
+    // Call the new cropEnhanceReceiptImage method from ReceiptProcessor
+    const { displayImageUrl } = await receiptProcessor.cropEnhanceReceiptImage(
+      receiptId,
+      imageBuffer,
+      options
+    );
 
-    // Save the optimized image to a new file
-    await fs.writeFile(optimizedImagePath, optimizedBuffer);
-
-    // Update receipt data with the new optimized image path and set it as display
-    receipt.optimizedImageUrl = `/uploads/receipts/${optimizedFilename}`;
-    receipt.displayImageUrl = receipt.optimizedImageUrl;
-    await persistenceService.saveReceipt(receipt);
-
-    res.status(200).json({ message: 'Image optimized successfully', displayImageUrl: receipt.displayImageUrl });
+    res.status(200).json({ message: 'Image crop-enhanced successfully', displayImageUrl });
 
   } catch (error) {
-    console.error('Error optimizing receipt image:', error);
-    res.status(500).json({ error: 'Failed to optimize receipt image' });
+    console.error('Error crop-enhancing receipt image:', error);
+    res.status(500).json({ error: 'Failed to crop and enhance receipt image' });
   }
 });
 

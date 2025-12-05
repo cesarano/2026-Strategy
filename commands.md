@@ -1,355 +1,62 @@
-### Scaffolding the Frontend
-
-**Command:**
-`npx create-vite@latest frontend --template react-ts`
+### Implementing Image Enhancement Features (Crop & Enhance, Canify Enhance)
 
 **Reason:**
-To scaffold the frontend application using Vite with the `react-ts` template, creating a modern React project with TypeScript.
-
----
-
-### Creating the Backend Directory
-
-**Command:**
-`mkdir backend`
-
-**Reason:**
-To create the directory that will contain the backend application, keeping the project structure organized.
-
----
-
-### Initializing the Backend Project
-
-**Command:**
-`npm init -y`
-
-**Reason:**
-To initialize a new Node.js project within the `packages/backend` directory, generating a `package.json` file with default settings.
-
----
-
-### Installing Backend Web Framework
-
-**Command:**
-`npm install express`
-
-**Reason:**
-To install `express`, a minimal and flexible Node.js web application framework that will serve as the foundation for our backend API.
-
----
-
-### Installing Backend Development Dependencies
-
-**Command:**
-`npm install -D typescript @types/express ts-node nodemon`
-
-**Reason:**
-To install essential development dependencies for the backend. `typescript` enables the use of TypeScript. `@types/express` provides TypeScript type definitions for the Express framework. `ts-node` allows for the direct execution of TypeScript files. `nodemon` automatically restarts the server upon file changes, improving development workflow.
-
----
-
-### Creating Backend Source Directory
-
-**Command:**
-`mkdir src`
-
-**Reason:**
-To create the `src` directory, which will contain all the source code for the backend application.
-
----
-
-### Creating Backend Entry Point
-
-**File Creation:**
-**File:** `packages/backend/src/index.ts`
-
-**Reason:**
-To create the main entry point for the backend application, with a basic Express server setup.
-
----
-
-### Creating Backend TypeScript Configuration
-
-**File Creation:**
-**File:** `packages/backend/tsconfig.json`
-
-**Reason:**
-To configure the TypeScript compiler for the backend project, specifying options like the output directory, root directory, and module system.
-
----
-
-### Adding Backend Development Script
-
-**Modification:**
-**File:** `packages/backend/package.json`
-
-**Reason:**
-To add a `dev` script for running the backend server with `nodemon` and `ts-node`, which enables automatic restarts on file changes and direct execution of TypeScript code.
-
----
-
-### Initializing Git Repository
-
-**Command:**
-`git init`
-
-**Reason:**
-To initialize a local Git repository for the project, which will be used for version control and tracking changes to the codebase.
-
----
-
-### Connecting to GitHub with SSH
-
-**Note:** These are instructions for connecting the local repository to a remote GitHub repository using SSH.
-
-**1. Check for Existing SSH Keys**
-`ls -al ~/.ssh`
-
-**2. Generate a New SSH Key (if needed)`
-`ssh-keygen -t ed25519 -C "your_email@example.com"`
-
-**3. Add Your SSH Key to the ssh-agent**
-`eval "$(ssh-agent -s)"`
-`ssh-add ~/.ssh/id_ed25519`
-
-**4. Add the SSH Key to Your GitHub Account**
-`cat ~/.ssh/id_ed25519.pub`
-(Copy the output and add it to your GitHub account settings)
-
-**5. Test Your SSH Connection**
-`ssh -T git@github.com`
-
-**6. Connect Your Local Repository to GitHub**
-`git remote add origin <your-ssh-url>`
-`git branch -M main`
-`git add .`
-`git commit -m "Initial commit: project structure and setup"`
-`git push -u origin main`
-
----
-
-### Fixing a Rejected Push (Divergent Branches)
-
-**Note:** These commands are used to fix push errors when the local and remote histories have diverged. This is a common one-time setup issue.
-
-**1. Configure pull strategy to merge (solves the 'fatal' error)**
-`git config pull.rebase false`
-
-**2. Pull and merge unrelated histories (non-interactive)**
-`git pull origin main --allow-unrelated-histories --no-edit`
-
-**3. Push your changes again**
-`git push origin main`
-
----
-
-### Defining Data Models
-
-**File Creation:**
-**File:** `packages/backend/src/types.ts`
-
-**Reason:**
-To define the core data structures (`Solution` and `StrategicInitiative`) for the application using TypeScript interfaces.
-
----
-
-### Setting Up Backend Testing
-
-**Command:**
-`npm install -D jest ts-jest @types/jest`
-
-**Reason:**
-To install Jest and its related TypeScript dependencies (`ts-jest`, `@types/jest`) to set up the testing framework for the backend.
-
----
-
-### Configuring Jest for Backend
-
-**File Creation:**
-**File:** `packages/backend/jest.config.js`
-
-**Reason:**
-To configure Jest for the backend, specifying that it should use the `ts-jest` preset to handle TypeScript files and run in a Node.js environment.
-
----
-
-### Adding Backend Test Script
-
-**Modification:**
-**File:** `packages/backend/package.json`
-
-**Reason:**
-To replace the placeholder `test` script with a script that runs Jest, allowing tests to be executed with `npm test`.
-
----
-
-### Creating Backend Test Directory
-
-**Command:**
-`mkdir -p src/__tests__`
-
-**Reason:**
-To create a directory to hold the test files for the backend application.
-
----
-
-### Creating Data Model Test File
-
-**File Creation:**
-**File:** `packages/backend/src/__tests__/types.test.ts`
-
-**Reason:**
-To create a test file for the data models, ensuring that the `Solution` and `StrategicInitiative` interfaces can be used as expected.
-
----
-
-### Implementing AI Specialist Service
-
-**File Creation & Dependencies:**
-**Command:** `npm install pdf-parse` and `npm install -D @types/pdf-parse` (in backend)
-**File:** `packages/backend/src/services/ai/AISpecialist.ts`
-**File:** `packages/backend/src/services/ai/__tests__/AISpecialist.test.ts`
-
-**Reason:**
-To create the `AISpecialist` class responsible for handling AI requests. Installed `pdf-parse` to allow extracting text from PDF files to be used as context for the AI.
-
----
-
-### Creating AI API Routes
-
-**File Creation & Dependencies:**
-**Command:** `npm install multer` and `npm install -D @types/multer` (in backend)
-**File:** `packages/backend/src/routes/aiRoutes.ts`
-**File:** `packages/backend/src/routes/__tests__/aiRoutes.test.ts`
-**Modification:** `packages/backend/src/index.ts` (Mounted routes)
-
-**Reason:**
-To expose the AI capabilities via a REST API. `multer` was installed to handle `multipart/form-data` requests, allowing file uploads alongside text prompts. The routes were mounted in the main Express app.
-
----
-
-### Integrating Google Gemini
-
-**Command:** `npm install @google/generative-ai dotenv` (in backend)
-**Modification:** `packages/backend/src/services/ai/AISpecialist.ts`
-
-**Reason:**
-To integrate the real Google Gemini API using the `@google/generative-ai` SDK. The service was updated to use the API key from environment variables and fallback to a mock response if the key is missing or the request fails.
-
----
-
-### Frontend AI Integration
-
-**Command:** `npm install axios` (in frontend)
-**File:** `packages/frontend/src/services/aiService.ts`
-**File:** `packages/frontend/src/components/ChatInterface.tsx`
-**File:** `packages/frontend/src/components/ChatInterface.css`
-**Modification:** `packages/frontend/src/App.tsx`
-**Modification:** `packages/frontend/vite.config.ts` (Added proxy)
-
-**Reason:**
-To create the user interface for interacting with the AI. `axios` was added for API requests. A `ChatInterface` component was built to handle messaging and file uploads. The Vite config was updated to proxy `/api` requests to the backend development server.
-
----
-
-### Frontend Testing Setup
-
-**Command:** `npm install -D @testing-library/react @testing-library/jest-dom @testing-library/user-event vitest jsdom` (in frontend)
-**File:** `packages/frontend/src/components/__tests__/ChatInterface.test.tsx`
-**File:** `packages/frontend/src/test/setup.ts`
-**Modification:** `packages/frontend/vite.config.ts` (configured Vitest)
-
-**Reason:**
-To set up a testing environment for the React frontend using Vitest and React Testing Library, ensuring the UI components function correctly.
-
----
-
-### Implementing Persistence
-
-**Command:** `npm install uuid` and `npm install -D @types/uuid` (in backend)
-**File:** `packages/backend/src/services/persistence/FilePersistenceService.ts`
-**File:** `packages/backend/src/services/persistence/__tests__/FilePersistenceService.test.ts`
-**Modification:** `packages/backend/src/routes/aiRoutes.ts`
-
-**Reason:**
-To save chat history. A `FilePersistenceService` was created to store chat sessions as JSON files in a `data` directory. The AI route was updated to save messages to this persistent storage.
-
----
-
-### Fixing UUID Compatibility
-
-**Command:** `npm install uuid@9` (in backend)
-**Modification:** `packages/backend/jest.config.js` (Reverted mapping)
-
-**Reason:**
-Downgraded `uuid` to version 9 to resolve an ECMAScript Module (ESM) compatibility issue with Jest, which was causing test failures with the default export of version 11+.
-
----
-
-### Improving Chat History Layout
-
-**Modification:** `packages/frontend/src/apps/strategy/StrategyApp.tsx`
-**Modification:** `packages/frontend/src/apps/strategy/StrategyApp.css`
-**Modification:** `packages/frontend/src/index.css`
-
-**Reason:**
-To move the Chat History to the bottom of the screen and adjust the application layout for better mobile usability, ensuring the chat window and history share the vertical space effectively.
-
----
-
-### Implementing Receipt Scanner (Mode 2)
-
-**Directories:** `mkdir -p packages/backend/data/receipts packages/backend/uploads/receipts`
-**File:** `packages/backend/src/services/persistence/ReceiptPersistenceService.ts`
-**File:** `packages/backend/src/services/ai/ReceiptProcessor.ts`
-**File:** `packages/backend/src/routes/receiptRoutes.ts`
-**Modification:** `packages/backend/src/services/ai/AISpecialist.ts` (Multimodal support)
-**Modification:** `packages/backend/src/index.ts` (Static files & Routes)
-
-**Reason:**
-To implement the backend infrastructure for the Smart Receipt Scanner. This involved creating storage for receipt images and data, a specialized AI processor for extracting JSON from images, and API endpoints to handle uploads and retrieval.
-
----
-
-### Frontend Receipt Scanner UI
-
-**File:** `packages/frontend/src/services/receiptService.ts`
-**File:** `packages/frontend/src/apps/mode2/Mode2App.tsx`
-**File:** `packages/frontend/src/apps/mode2/Mode2App.css`
-**Modification:** `packages/frontend/vite.config.ts` (Added `/uploads` proxy)
-
-**Reason:**
-To build the user interface for Mode 2. This included a camera-ready upload button, a searchable gallery of receipts, and a detailed view for inspecting extracted data. The Vite config was updated to proxy image requests to the backend.
-
----
-
-### Configuring Nodemon
-
-**File:** `packages/backend/nodemon.json`
-**Modification:** `packages/backend/package.json`
-
-**Reason:**
-To prevent the backend server from crashing/restarting loop when an image is uploaded. Configured `nodemon` to ignore the `uploads` and `data` directories.
-
----
-
-### Receipt Scanner UI Enhancements (Rolled Back & Refined)
-
-**Command:** `npm install date-fns react-datepicker react-swipeable @types/react-datepicker --workspace=packages/frontend` (Installed but currently unused)
-**Modification:** `packages/backend/src/routes/receiptRoutes.ts` (Added DELETE endpoint)
-**Modification:** `packages/backend/src/services/persistence/ReceiptPersistenceService.ts` (Added deleteReceipt)
-**Modification:** `packages/frontend/src/apps/mode2/Mode2App.tsx` (Added Edit/Manage Modal)
-**Modification:** `packages/frontend/src/apps/mode2/Mode2App.css` (Styled Edit Button & Modal)
-
-**Reason:**
-To enhance receipt management. Added backend support for deletion. Implemented an "Edit" workflow in the frontend where users can open a modal to manage (delete) receipts. Rolled back complex swipe/calendar features to resolve stability issues.
-
----
-
-### Grouping & Thumbnails (v0.2.2)
-
-**Modification:** `packages/frontend/src/apps/mode2/Mode2App.tsx` (Native Grouping Logic, Thumbnail rendering)
-**Modification:** `packages/frontend/src/apps/mode2/Mode2App.css` (Group headers, Flex card layout)
-
-**Reason:**
-To improve organization and visual scanning of receipts. Re-implemented Day/Month/Year grouping using stable native JS (avoiding external library crashes). Added thumbnails to receipt cards for better UX.
+To refactor the existing generic image optimization functionality into a more specific, extensible "Crop & Enhance" feature, and to introduce a placeholder for a future "Canify Enhance" feature. This involves centralizing image processing using the `sharp` library.
+
+**Steps Performed:**
+
+1.  **Installed `sharp` in Backend:**
+    *   **Command:** `npm install sharp --prefix packages/backend && npm install @types/sharp --save-dev --prefix packages/backend`
+    *   **Reason:** To enable high-performance image processing capabilities in the Node.js backend.
+
+2.  **Created `ImageProcessorService`:**
+    *   **File:** `packages/backend/src/services/ImageProcessorService.ts`
+    *   **Reason:** To encapsulate `sharp`-based image processing logic, including resizing, cropping, format conversion, grayscale, sharpening, noise reduction, and metadata stripping, into a reusable service.
+
+3.  **Created `ImageProcessorService` Test File:**
+    *   **File:** `packages/backend/src/services/__tests__/ImageProcessorService.test.ts`
+    *   **Reason:** To ensure the `ImageProcessorService` functions correctly and to prevent regressions.
+
+4.  **Modified `ReceiptProcessor` (Backend):**
+    *   **File:** `packages/backend/src/services/ai/ReceiptProcessor.ts`
+    *   **Changes:**
+        *   Imported `ImageProcessorService` and `ImageProcessingOptions`.
+        *   Instantiated `ImageProcessorService` and `ReceiptPersistenceService` within its constructor.
+        *   Added a new asynchronous method `cropEnhanceReceiptImage` to handle the image processing workflow using `ImageProcessorService`, including saving the processed image and updating receipt data.
+    *   **Reason:** To integrate the new image processing capabilities into the receipt handling logic and provide a dedicated method for the "Crop & Enhance" feature.
+
+5.  **Modified `receiptRoutes` (Backend):**
+    *   **File:** `packages/backend/src/routes/receiptRoutes.ts`
+    *   **Changes:**
+        *   Renamed the route `POST /api/receipts/:id/optimize-image` to `POST /api/receipts/:id/crop-enhance`.
+        *   Removed the direct `sharp` implementation from the route handler.
+        *   Updated the route handler to call `receiptProcessor.cropEnhanceReceiptImage` and pass `ImageProcessingOptions` from the request body.
+        *   Removed the direct `sharp` import.
+    *   **Reason:** To update the API endpoint name, delegate image processing to the `ReceiptProcessor` service, and enable configurable enhancement options via the request body.
+
+6.  **Modified `receiptService` (Frontend):**
+    *   **File:** `packages/frontend/src/services/receiptService.ts`
+    *   **Changes:**
+        *   Added `ImageProcessingOptions` interface for type safety.
+        *   Renamed `optimizeReceiptImage` to `cropEnhanceReceiptImage`.
+        *   Updated the API endpoint it calls from `optimize-image` to `crop-enhance`.
+        *   Modified its signature to accept `options: ImageProcessingOptions` and pass them in the `POST` request body.
+    *   **Reason:** To align the frontend service with the renamed backend API and allow the frontend to specify image processing options.
+
+7.  **Modified `Mode2App` (Frontend):**
+    *   **File:** `packages/frontend/src/apps/mode2/Mode2App.tsx`
+    *   **Changes:**
+        *   Updated the import statement to use `cropEnhanceReceiptImage` and `ImageProcessingOptions`.
+        *   Modified the `handleOptimizeImage` function to call `cropEnhanceReceiptImage` with a default set of `ImageProcessingOptions`.
+        *   Added a disabled "Canify Enhance (Coming Soon)" button as a placeholder in the UI.
+    *   **Reason:** To integrate the new "Crop & Enhance" functionality into the UI and provide a placeholder for future enhancement features.
+
+**Troubleshooting & Fixes:**
+
+*   **TSError: Multiple Default Exports (`receiptRoutes.ts`)**:
+    *   **Issue:** Previous `replace` operations inadvertently duplicated route definitions and `export default router;` statements in `receiptRoutes.ts`.
+    *   **Resolution:** Performed a targeted `replace` operation to remove all duplicate routes and ensure only one `export default router;` statement remained at the end of the file.
+
+*   **Frontend `Unexpected token` Error (`Mode2App.tsx`)**:
+    *   **Issue:** A previous `replace` operation incorrectly placed function definitions (like `handleOptimizeImage`) inside the JSX return block of the `Mode2App` component, creating a syntax error and duplicating component JSX.
+    *   **Resolution:** Overwrote the entire `packages/frontend/src/apps/mode2/Mode2App.tsx` file with a completely regenerated, corrected version, ensuring all functions are defined at the top level of the component and the JSX structure is valid.
