@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "shutdown": "fuser -k -s 3001/tcp || true && fuser -k -s 5173/tcp || true && echo 'Shutdown complete: Ports 3001 and 5173 cleared.'",
     "dev": "concurrently \"npm:dev:*\"",
     "dev:frontend": "npm run dev --workspace=frontend",
     "dev:backend": "npm run dev --workspace=backend"

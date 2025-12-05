@@ -15,7 +15,9 @@ export interface ReceiptData {
   currency: string | null;
   category: string | null;
   items: ReceiptItem[];
-  imageUrl: string;
+  originalImageUrl: string; // Path to the original uploaded image
+  optimizedImageUrl?: string; // Optional path to the optimized image
+  displayImageUrl: string; // The URL currently selected for display (original or optimized)
   createdAt: string;
 }
 
@@ -40,7 +42,21 @@ export class ReceiptPersistenceService {
         if (file.endsWith('.json')) {
           const content = await fs.readFile(path.join(this.dataDir, file), 'utf-8');
           try {
-            receipts.push(JSON.parse(content));
+            const receipt = JSON.parse(content);
+            // --- Migration Logic for Older Receipts ---
+            // If originalImageUrl is missing but imageUrl exists (older receipt format), migrate it
+            if (!receipt.originalImageUrl && receipt.imageUrl) {
+                receipt.originalImageUrl = receipt.imageUrl;
+            }
+            // Ensure displayImageUrl is set (use originalImageUrl as fallback)
+            if (!receipt.displayImageUrl) {
+                receipt.displayImageUrl = receipt.originalImageUrl;
+            }
+            // If originalImageUrl is still missing, it means no image URL was ever present
+            // (e.g., if a receipt was created with only AI data and no image)
+            // In a real app, this might need more robust handling. For now, we assume originalImageUrl will always be set.
+            // --- End Migration Logic ---
+            receipts.push(receipt);
           } catch (e) {
             console.error(`Failed to parse receipt file: ${file}`, e);
           }
@@ -63,7 +79,16 @@ export class ReceiptPersistenceService {
     try {
       const filePath = path.join(this.dataDir, `${id}.json`);
       const content = await fs.readFile(filePath, 'utf-8');
-      return JSON.parse(content);
+      const receipt = JSON.parse(content);
+      // --- Migration Logic for Older Receipts ---
+      if (!receipt.originalImageUrl && receipt.imageUrl) {
+          receipt.originalImageUrl = receipt.imageUrl;
+      }
+      if (!receipt.displayImageUrl) {
+          receipt.displayImageUrl = receipt.originalImageUrl;
+      }
+      // --- End Migration Logic ---
+      return receipt;
     } catch (error) {
       return null;
     }
@@ -71,7 +96,7 @@ export class ReceiptPersistenceService {
 
   async deleteReceipt(id: string): Promise<boolean> {
     try {
-      // 1. Get receipt to find the image path
+      // 1. Get receipt to find the image paths
       const receipt = await this.getReceipt(id);
       if (!receipt) return false;
 
@@ -79,24 +104,23 @@ export class ReceiptPersistenceService {
       const jsonPath = path.join(this.dataDir, `${id}.json`);
       await fs.unlink(jsonPath);
 
-      // 3. Delete Image file
-      if (receipt.imageUrl) {
-        // receipt.imageUrl is like "/uploads/receipts/filename.jpg"
-        // We need to resolve this relative to project root
-        // The imageUrl starts with a slash, so we strip it or handle it.
-        // process.cwd() is usually the package root or project root.
-        // backend runs from packages/backend usually, but let's be safe.
-        // based on previous file uploads: path.join(process.cwd(), 'uploads', 'receipts')
-        
-        // If imageUrl is "/uploads/receipts/xyz.jpg", we can just join it with process.cwd() removing the leading slash
-        const relativePath = receipt.imageUrl.startsWith('/') ? receipt.imageUrl.slice(1) : receipt.imageUrl;
-        const imagePath = path.join(process.cwd(), relativePath);
-        
+      // 3. Delete Original Image file
+      if (receipt.originalImageUrl) {
+        const originalImagePath = path.join(process.cwd(), receipt.originalImageUrl.startsWith('/') ? receipt.originalImageUrl.slice(1) : receipt.originalImageUrl);
         try {
-          await fs.unlink(imagePath);
+          await fs.unlink(originalImagePath);
         } catch (imgErr) {
-          console.warn(`Failed to delete image at ${imagePath}`, imgErr);
-          // We don't fail the whole operation if image delete fails (maybe already gone)
+          console.warn(`Failed to delete original image at ${originalImagePath}`, imgErr);
+        }
+      }
+
+      // 4. Delete Optimized Image file if it exists
+      if (receipt.optimizedImageUrl) {
+        const optimizedImagePath = path.join(process.cwd(), receipt.optimizedImageUrl.startsWith('/') ? receipt.optimizedImageUrl.slice(1) : receipt.optimizedImageUrl);
+        try {
+          await fs.unlink(optimizedImagePath);
+        } catch (imgErr) {
+          console.warn(`Failed to delete optimized image at ${optimizedImagePath}`, imgErr);
         }
       }
 

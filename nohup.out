@@ -1,0 +1,47 @@
+
+> 2026-strategy@0.2.2 dev
+> concurrently "npm:dev:*"
+
+[frontend] 
+[frontend] > 2026-strategy@0.2.2 dev:frontend
+[frontend] > npm run dev --workspace=frontend
+[frontend] 
+[backend] 
+[backend] > 2026-strategy@0.2.2 dev:backend
+[backend] > npm run dev --workspace=backend
+[backend] 
+[frontend] 
+[frontend] > frontend@0.2.2 dev
+[frontend] > vite
+[frontend] 
+[backend] 
+[backend] > backend@0.2.2 dev
+[backend] > nodemon
+[backend] 
+[backend] [33m[nodemon] 3.1.11[39m
+[backend] [33m[nodemon] to restart at any time, enter `rs`[39m
+[backend] [33m[nodemon] watching path(s): src/**/*[39m
+[backend] [33m[nodemon] watching extensions: ts,json[39m
+[backend] [32m[nodemon] starting `ts-node src/index.ts`[39m
+[frontend] 
+[frontend]   VITE v7.2.6  ready in 227 ms
+[frontend] 
+[frontend]   ➜  Local:   http://localhost:5173/
+[frontend]   ➜  Network: http://10.10.10.200:5173/
+[frontend]   ➜  Network: http://10.10.10.201:5173/
+[frontend]   ➜  Network: http://100.68.134.92:5173/
+[backend] [dotenv@17.2.3] injecting env (1) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+[backend] [server]: Server is running at http://0.0.0.0:3001
+[backend] [32m[nodemon] clean exit - waiting for changes before restart[39m
+[frontend] 18:46:49 [vite] http proxy error: /api/ai/sessions/8e8d0311-5f08-4b4b-85b0-17e1e46445a9
+[frontend] Error: connect ECONNREFUSED 127.0.0.1:3001
+[frontend]     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[frontend] 18:46:50 [vite] http proxy error: /api/ai/sessions
+[frontend] Error: connect ECONNREFUSED 127.0.0.1:3001
+[frontend]     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[backend] [32m[nodemon] restarting child process[39m
+[backend] [32m[nodemon] starting `ts-node src/index.ts`[39m
+[frontend] npm run dev:frontend exited with code SIGHUP
+[backend] [dotenv@17.2.3] injecting env (1) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[backend] [server]: Server is running at http://0.0.0.0:3001
+[backend] [32m[nodemon] clean exit - waiting for changes before restart[39m

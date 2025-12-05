@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { getReceipts, uploadReceipt, deleteReceipt, type ReceiptData } from '../../services/receiptService';
+import { getReceipts, uploadReceipt, deleteReceipt, optimizeReceiptImage, downloadReceiptImage, setDisplayImageVersion, type ReceiptData } from '../../services/receiptService';
 import './Mode2App.css';
 
 export const Mode2App: React.FC = () => {
@@ -9,6 +9,7 @@ export const Mode2App: React.FC = () => {
   const [selectedReceipt, setSelectedReceipt] = useState<ReceiptData | null>(null);
   const [editingReceipt, setEditingReceipt] = useState<ReceiptData | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isOptimizingImage, setIsOptimizingImage] = useState(false); // New state for image optimization
   const [viewMode, setViewMode] = useState<'day' | 'month' | 'year'>('day');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -72,6 +73,49 @@ export const Mode2App: React.FC = () => {
     } catch (error) {
       console.error('Delete failed', error);
       alert('Failed to delete receipt.');
+    }
+  };
+
+  const handleOptimizeImage = async () => {
+    if (!editingReceipt) return;
+    setIsOptimizingImage(true);
+    try {
+      const response = await optimizeReceiptImage(editingReceipt.id);
+      alert('Image optimized successfully!');
+      // Update the editingReceipt state with the new optimized image URL
+      setEditingReceipt(prev => prev ? { 
+        ...prev, 
+        optimizedImageUrl: response.displayImageUrl, // Backend returns displayImageUrl as the new optimized one
+        displayImageUrl: response.displayImageUrl,
+      } : null);
+      await loadReceipts(); // Refresh receipts to reflect potential image changes
+    } catch (error) {
+      console.error('Image optimization failed:', error);
+      alert('Failed to optimize image. Please try again.');
+    } finally {
+      setIsOptimizingImage(false);
+    }
+  };
+
+  const handleDownloadImage = () => {
+    if (!editingReceipt) return;
+    // Download the currently displayed image version
+    downloadReceiptImage(editingReceipt.id);
+  };
+
+  const handleSetDisplayImageVersion = async (version: 'original' | 'optimized') => {
+    if (!editingReceipt) return;
+    try {
+      const response = await setDisplayImageVersion(editingReceipt.id, version);
+      // Update the editingReceipt state with the new display image URL
+      setEditingReceipt(prev => prev ? {
+        ...prev,
+        displayImageUrl: response.displayImageUrl,
+      } : null);
+      await loadReceipts(); // Refresh to update card view
+    } catch (error) {
+      console.error('Failed to set display image version:', error);
+      alert('Failed to switch image version.');
     }
   };
 
@@ -181,11 +225,13 @@ export const Mode2App: React.FC = () => {
                         >
                         <div className="card-thumbnail-container">
                             <img 
-                                src={receipt.imageUrl} 
+                                src={receipt.displayImageUrl} 
                                 alt="Thumbnail" 
                                 className="card-thumbnail"
                                 onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none'; // Hide broken images
+                                    (e.target as HTMLImageElement).onerror = null; // Prevent infinite loop
+                                    (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-image"%3E%3Crect x="3" y="3" width="18" height="18" rx="2" ry="2"%3E%3C/rect%3E%3Ccircle cx="8.5" cy="8.5" r="1.5"%3E%3C/circle%3E%3Cpolyline points="21 15 16 10 5 21"%3E%3C/polyline%3E%3C/svg%3E'; // Generic image icon
+                                    (e.target as HTMLImageElement).style.backgroundColor = '#f0f0f0';
                                 }} 
                             />
                         </div>
@@ -230,10 +276,59 @@ export const Mode2App: React.FC = () => {
                 <button className="close-btn" onClick={() => setEditingReceipt(null)}>&times;</button>
               </div>
               <div className="modal-body">
+                 {/* Display current image */}
+                 <div className="receipt-image-preview-container">
+                    <img 
+                        src={editingReceipt.displayImageUrl}
+                        alt="Receipt Preview"
+                        className="modal-receipt-image"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).onerror = null; // Prevent infinite loop
+                            (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-image"%3E%3Crect x="3" y="3" width="18" height="18" rx="2" ry="2"%3E%3C/rect%3E%3Ccircle cx="8.5" cy="8.5" r="1.5"%3E%3C/circle%3E%3Cpolyline points="21 15 16 10 5 21"%3E%3C/polyline%3E%3C/svg%3E'; // Generic image icon
+                            (e.target as HTMLImageElement).style.backgroundColor = '#f0f0f0';
+                        }} 
+                    />
+                 </div>
+                 <div className="image-version-toggle">
+                    <label>
+                        <input 
+                            type="radio" 
+                            name="imageVersion" 
+                            value="original"
+                            checked={editingReceipt.displayImageUrl === editingReceipt.originalImageUrl}
+                            onChange={() => handleSetDisplayImageVersion('original')}
+                        /> Original
+                    </label>
+                    {editingReceipt.optimizedImageUrl && (
+                        <label>
+                            <input 
+                                type="radio" 
+                                name="imageVersion" 
+                                value="optimized"
+                                checked={editingReceipt.displayImageUrl === editingReceipt.optimizedImageUrl}
+                                onChange={() => handleSetDisplayImageVersion('optimized')}
+                            /> Optimized
+                        </label>
+                    )}
+                 </div>
+
                  <p><strong>Store:</strong> {editingReceipt.storeName}</p>
                  <p><strong>Amount:</strong> {formatCurrency(editingReceipt.totalAmount, editingReceipt.currency)}</p>
                  
                  <div className="manage-actions">
+                    <button 
+                        className="action-btn"
+                        onClick={handleOptimizeImage}
+                        disabled={isOptimizingImage}
+                    >
+                        {isOptimizingImage ? 'Optimizing...' : '✨ Crop & Enhance'}
+                    </button>
+                    <button 
+                        className="action-btn"
+                        onClick={handleDownloadImage}
+                    >
+                        ⬇️ Download Image
+                    </button>
                     <button className="action-btn coming-soon-btn" disabled>Edit Details (Coming Soon)</button>
                     <button 
                         className="action-btn delete-btn-large"
@@ -257,9 +352,14 @@ export const Mode2App: React.FC = () => {
             <div className="modal-content">
               <div className="receipt-image-container">
                 <img 
-                  src={selectedReceipt.imageUrl} 
+                  src={selectedReceipt.displayImageUrl} // Use displayImageUrl here
                   alt="Receipt" 
                   className="receipt-image" 
+                  onError={(e) => {
+                      (e.target as HTMLImageElement).onerror = null; // Prevent infinite loop
+                      (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-image"%3E%3Crect x="3" y="3" width="18" height="18" rx="2" ry="2"%3E%3C/rect%3E%3Ccircle cx="8.5" cy="8.5" r="1.5"%3E%3C/circle%3E%3Cpolyline points="21 15 16 10 5 21"%3E%3C/polyline%3E%3C/svg%3E'; // Generic image icon
+                      (e.target as HTMLImageElement).style.backgroundColor = '#f0f0f0';
+                  }} 
                 />
               </div>
               <div className="receipt-info">

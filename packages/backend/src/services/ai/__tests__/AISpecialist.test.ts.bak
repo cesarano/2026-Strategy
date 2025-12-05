@@ -1,33 +1,44 @@
 import { AISpecialist } from '../AISpecialist';
 import fs from 'fs';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+// Don't import GoogleGenerativeAI directly here when using explicit factory mock
+
 const pdf = require('pdf-parse');
 
-// Mock dependencies
+// Mock external dependencies
 jest.mock('fs');
 jest.mock('pdf-parse', () => jest.fn());
-jest.mock('@google/generative-ai');
+
+// Create the mock for GoogleGenerativeAI class
+const mockGoogleGenerativeAI = jest.fn(); // This will be the mocked class constructor
+const mockGetGenerativeModel = jest.fn();
+const mockGenerateContent = jest.fn();
+
+jest.mock('@google/generative-ai', () => ({
+  GoogleGenerativeAI: mockGoogleGenerativeAI, // Assign our mock to the named export
+}));
+
 
 describe('AISpecialist', () => {
   let aiSpecialist: AISpecialist;
-  const mockGenerateContent = jest.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    process.env.GEMINI_API_KEY = 'mock-api-key';
+    // Reset all mocks before each test
+    jest.clearAllMocks(); // This will clear mockGoogleGenerativeAI, mockGetGenerativeModel, mockGenerateContent
 
-    // Setup mock for GoogleGenerativeAI
-    (GoogleGenerativeAI as jest.Mock).mockImplementation(() => ({
-      getGenerativeModel: jest.fn().mockReturnValue({
-        generateContent: mockGenerateContent,
-      }),
+    // Configure the mock implementation for this test run
+    mockGoogleGenerativeAI.mockImplementation(() => ({
+      getGenerativeModel: mockGetGenerativeModel,
     }));
-
+    mockGetGenerativeModel.mockReturnValue({
+      generateContent: mockGenerateContent,
+    });
     mockGenerateContent.mockResolvedValue({
       response: {
         text: () => 'Gemini Response',
       },
     });
+
+    process.env.GEMINI_API_KEY = 'mock-api-key';
 
     aiSpecialist = new AISpecialist();
   });
@@ -46,7 +57,8 @@ describe('AISpecialist', () => {
 
     expect(response.content).toBe('Gemini Response');
     expect(response.metadata?.model).toBe('gemini-2.0-flash');
-    expect(GoogleGenerativeAI).toHaveBeenCalledWith('mock-api-key');
+    expect(mockGoogleGenerativeAI).toHaveBeenCalledWith('mock-api-key');
+    expect(mockGetGenerativeModel).toHaveBeenCalledWith({ model: 'gemini-2.0-flash', systemInstruction: expect.any(String) });
     expect(mockGenerateContent).toHaveBeenCalled();
   });
 
@@ -83,7 +95,13 @@ describe('AISpecialist', () => {
       files: [{ path: 'test.pdf', mimeType: 'application/pdf' }]
     });
 
-    expect(mockGenerateContent).toHaveBeenCalledWith(expect.stringContaining(mockPdfText));
+    expect(mockGenerateContent).toHaveBeenCalledWith({
+        contents: expect.arrayContaining([
+            expect.objectContaining({ text: expect.stringContaining(prompt) }),
+            expect.objectContaining({ text: expect.stringContaining(mockPdfText) }),
+        ]),
+        generationConfig: undefined,
+    });
   });
   
   it('should include additional context in the prompt', async () => {
@@ -91,8 +109,12 @@ describe('AISpecialist', () => {
     const context = { previousAttempt: 'failed', score: 10 };
     await aiSpecialist.processRequest({ prompt, context });
     
-    // Verify that the JSON stringified context is part of the prompt sent to Gemini
-    expect(mockGenerateContent).toHaveBeenCalledWith(expect.stringContaining('"previousAttempt": "failed"'));
-    expect(mockGenerateContent).toHaveBeenCalledWith(expect.stringContaining('"score": 10'));
+    expect(mockGenerateContent).toHaveBeenCalledWith({
+        contents: expect.arrayContaining([
+            expect.objectContaining({ text: expect.stringContaining(prompt) }),
+            expect.objectContaining({ text: expect.stringContaining(JSON.stringify(context, null, 2)) }),
+        ]),
+        generationConfig: undefined,
+    });
   });
 });

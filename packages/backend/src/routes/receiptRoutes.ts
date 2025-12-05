@@ -1,10 +1,11 @@
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs/promises'; // Use fs.promises for async file operations
 import { v4 as uuidv4 } from 'uuid';
 import { ReceiptProcessor } from '../services/ai/ReceiptProcessor';
 import { ReceiptPersistenceService, ReceiptData } from '../services/persistence/ReceiptPersistenceService';
+import sharp from 'sharp'; // Import sharp
 
 const router = Router();
 const receiptProcessor = new ReceiptProcessor();
@@ -12,11 +13,11 @@ const persistenceService = new ReceiptPersistenceService();
 
 // Configure storage to save files to disk
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: async (req, file, cb) => { // Made async to use await for mkdir
     const uploadDir = path.join(process.cwd(), 'uploads', 'receipts');
     // Ensure directory exists
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    if (!require('fs').existsSync(uploadDir)) { // Use synchronous fs for existsSync
+      await fs.mkdir(uploadDir, { recursive: true }); // Use fs.promises.mkdir
     }
     cb(null, uploadDir);
   },
@@ -52,7 +53,7 @@ router.post('/', upload.single('receiptImage'), async (req: Request, res: Respon
     const filename = req.file.filename; // Saved filename on disk
     
     // Read file buffer for AI processing
-    const fileBuffer = fs.readFileSync(filePath);
+    const fileBuffer = await fs.readFile(filePath); // Use fs.promises.readFile
 
     // Process with AI
     const extractedData = await receiptProcessor.processReceipt(fileBuffer, mimeType, req.file.originalname);
@@ -67,7 +68,8 @@ router.post('/', upload.single('receiptImage'), async (req: Request, res: Respon
       currency: extractedData.currency || 'USD',
       category: extractedData.category || 'Uncategorized',
       items: extractedData.items || [],
-      imageUrl: `/uploads/receipts/${filename}`, // Relative URL for frontend
+      originalImageUrl: `/uploads/receipts/${filename}`, // Initialize original image URL
+      displayImageUrl: `/uploads/receipts/${filename}`, // Display original by default
       createdAt: new Date().toISOString(),
     };
 
@@ -94,6 +96,118 @@ router.delete('/:id', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error deleting receipt:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/receipts/:id/optimize-image - Crop and enhance a receipt image
+router.post('/:id/optimize-image', async (req: Request, res: Response) => {
+  try {
+    const receiptId = req.params.id;
+    const receipt = await persistenceService.getReceipt(receiptId);
+
+    if (!receipt) {
+      return res.status(404).json({ error: 'Receipt not found' });
+    }
+
+    // Get the original image path
+    const originalFilename = path.basename(receipt.originalImageUrl);
+    const originalImagePath = path.join(process.cwd(), 'uploads', 'receipts', originalFilename);
+
+    if (!require('fs').existsSync(originalImagePath)) {
+      return res.status(404).json({ error: 'Original image file not found' });
+    }
+
+    // Read the original image buffer
+    const imageBuffer = await fs.readFile(originalImagePath);
+
+    // Generate a new filename for the optimized image
+    const optimizedFilename = `optimized-${receiptId}-${uuidv4()}.jpeg`;
+    const optimizedImagePath = path.join(process.cwd(), 'uploads', 'receipts', optimizedFilename);
+
+    // Optimize and resize using sharp
+    const optimizedBuffer = await sharp(imageBuffer)
+      .resize(1024, 1024, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+
+    // Save the optimized image to a new file
+    await fs.writeFile(optimizedImagePath, optimizedBuffer);
+
+    // Update receipt data with the new optimized image path and set it as display
+    receipt.optimizedImageUrl = `/uploads/receipts/${optimizedFilename}`;
+    receipt.displayImageUrl = receipt.optimizedImageUrl;
+    await persistenceService.saveReceipt(receipt);
+
+    res.status(200).json({ message: 'Image optimized successfully', displayImageUrl: receipt.displayImageUrl });
+
+  } catch (error) {
+    console.error('Error optimizing receipt image:', error);
+    res.status(500).json({ error: 'Failed to optimize receipt image' });
+  }
+});
+
+// GET /api/receipts/:id/download-image - Download a receipt image
+router.get('/:id/download-image', async (req: Request, res: Response) => {
+  try {
+    const receiptId = req.params.id;
+    const receipt = await persistenceService.getReceipt(receiptId); // Changed to getReceipt
+
+    if (!receipt) {
+      return res.status(404).json({ error: 'Receipt not found' });
+    }
+
+    // Use displayImageUrl for download
+    const filename = path.basename(receipt.displayImageUrl);
+    const imagePath = path.join(process.cwd(), 'uploads', 'receipts', filename);
+
+    const originalFs = require('fs');
+    if (!originalFs.existsSync(imagePath)) {
+      return res.status(404).json({ error: 'Image file not found' });
+    }
+
+    // Set header to prompt download
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.sendFile(imagePath);
+
+  } catch (error) {
+    console.error('Error downloading receipt image:', error);
+    res.status(500).json({ error: 'Failed to download receipt image' });
+  }
+});
+
+// POST /api/receipts/:id/set-display-image - Set which image version to display
+router.post('/:id/set-display-image', async (req: Request, res: Response) => {
+  try {
+    const receiptId = req.params.id;
+    const { version } = req.body; // 'original' or 'optimized'
+
+    if (version !== 'original' && version !== 'optimized') {
+      return res.status(400).json({ error: 'Invalid version specified. Must be "original" or "optimized".' });
+    }
+
+    const receipt = await persistenceService.getReceipt(receiptId);
+    if (!receipt) {
+      return res.status(404).json({ error: 'Receipt not found' });
+    }
+
+    let newDisplayImageUrl: string;
+    if (version === 'original') {
+      newDisplayImageUrl = receipt.originalImageUrl;
+    } else { // version === 'optimized'
+      if (!receipt.optimizedImageUrl) {
+        return res.status(400).json({ error: 'Optimized image not available for this receipt.' });
+      }
+      newDisplayImageUrl = receipt.optimizedImageUrl;
+    }
+
+    receipt.displayImageUrl = newDisplayImageUrl;
+    await persistenceService.saveReceipt(receipt);
+
+    res.status(200).json({ message: 'Display image version updated successfully', displayImageUrl: newDisplayImageUrl });
+
+  } catch (error) {
+    console.error('Error setting display image version:', error);
+    res.status(500).json({ error: 'Failed to set display image version' });
   }
 });
 
