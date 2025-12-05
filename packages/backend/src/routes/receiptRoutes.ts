@@ -218,4 +218,41 @@ router.post('/:id/set-display-image', async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/receipts/:id/upload-optimized-image - Upload a client-side optimized image
+router.post('/:id/upload-optimized-image', upload.single('optimizedImage'), async (req: Request, res: Response) => {
+  if (!req.file) {
+    res.status(400).json({ error: 'No image file provided' });
+    return;
+  }
+
+  try {
+    const receiptId = req.params.id;
+    const filename = req.file.filename;
+    
+    const receipt = await persistenceService.getReceipt(receiptId);
+    if (!receipt) {
+        // Clean up the uploaded file if receipt not found
+        await fs.unlink(req.file.path);
+        return res.status(404).json({ error: 'Receipt not found' });
+    }
+
+    const newOptimizedImageUrl = `/uploads/receipts/${filename}`;
+
+    // Update receipt with new optimized image
+    receipt.optimizedImageUrl = newOptimizedImageUrl;
+    receipt.displayImageUrl = newOptimizedImageUrl;
+
+    await persistenceService.saveReceipt(receipt);
+
+    res.status(200).json({ 
+        message: 'Optimized image uploaded successfully', 
+        displayImageUrl: newOptimizedImageUrl 
+    });
+
+  } catch (error) {
+    console.error('Error uploading optimized image:', error);
+    res.status(500).json({ error: 'Failed to upload optimized image' });
+  }
+});
+
 export default router;

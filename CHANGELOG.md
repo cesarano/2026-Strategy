@@ -2,8 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachanglog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.2.4] - 2025-12-05
+
+### Fixed
+- **OpenCV Initialization (Frontend):** Resolved "Can't find variable cvReadyPromise" error by correctly defining and awaiting the `cvReadyPromise` in `DocumentScanner.ts`, ensuring OpenCV.js is fully loaded before processing images.
+- **Frontend Build:** Fixed `TS6133: 'e' is declared but its value is never read` in `AIReceiptsApp.tsx` by removing an unused parameter from an error handler.
 
 ## [0.2.3] - 2025-12-05
 

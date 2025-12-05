@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { getReceipts, uploadReceipt, deleteReceipt, cropEnhanceReceiptImage, downloadReceiptImage, setDisplayImageVersion, updateReceipt, type ReceiptData, type ImageProcessingOptions } from '../../services/receiptService';
+import { getReceipts, uploadReceipt, deleteReceipt, cropEnhanceReceiptImage, downloadReceiptImage, setDisplayImageVersion, updateReceipt, uploadOptimizedImage, type ReceiptData, type ImageProcessingOptions } from '../../services/receiptService';
+import { processReceipt } from '../../services/DocumentScanner';
 import './AIReceiptsApp.css';
 
 type EditingReceipt = ReceiptData & { isEditing?: boolean };
@@ -116,6 +117,63 @@ export const AIReceiptsApp: React.FC = () => {
     }
   };
 
+  const handleCanifyEnhance = async () => {
+    if (!editingReceipt) return;
+    setIsOptimizingImage(true);
+
+    try {
+      // Load the original image to ensure highest resolution for processing
+      const originalImage = new Image();
+      originalImage.crossOrigin = "anonymous"; // Essential for canvas operations
+      originalImage.src = editingReceipt.originalImageUrl;
+
+      await new Promise<void>((resolve, reject) => {
+        originalImage.onload = () => resolve();
+        originalImage.onerror = () => reject(new Error("Failed to load original image for enhancement."));
+      });
+
+      // Process with OpenCV (Client-side)
+      // processReceipt is now async due to awaiting cvReadyPromise internally
+      const processedCanvas = await processReceipt(originalImage);
+
+      // Convert to Blob
+      processedCanvas.toBlob(async (blob) => {
+        if (!blob) {
+           setIsOptimizingImage(false);
+           alert("Failed to generate image blob");
+           return;
+        }
+
+        try {
+            // Upload as new optimized version
+            const response = await uploadOptimizedImage(editingReceipt.id, blob);
+            
+            alert('Image Enhanced (Canify) successfully!');
+            
+            // Update state
+            setEditingReceipt(prev => prev ? {
+                ...prev,
+                optimizedImageUrl: response.displayImageUrl,
+                displayImageUrl: response.displayImageUrl,
+            } : null);
+            await loadReceipts();
+
+        } catch (uploadError) {
+            console.error("Upload failed", uploadError);
+            alert("Failed to save enhanced image.");
+        } finally {
+            setIsOptimizingImage(false);
+        }
+
+      }, 'image/jpeg', 0.95);
+
+    } catch (error) {
+      console.error("Canify Enhance failed:", error);
+      alert(`Enhancement failed: ${(error as Error).message}`);
+      setIsOptimizingImage(false);
+    }
+  };
+
   const handleDownloadImage = () => {
     if (!editingReceipt) return;
     // Download the currently displayed image version
@@ -152,7 +210,8 @@ export const AIReceiptsApp: React.FC = () => {
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!editingFormData) return;
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
+    const type = e.target.type;
     
     // Handle number inputs
     const newValue = type === 'number' ? parseFloat(value) : value;
@@ -165,7 +224,7 @@ export const AIReceiptsApp: React.FC = () => {
 
   const handleItemChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     if (!editingFormData || !editingFormData.items) return;
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
     const newItems = [...editingFormData.items];
     const itemToUpdate = { ...newItems[index] };
     
@@ -426,6 +485,8 @@ export const AIReceiptsApp: React.FC = () => {
                     {/* Display current image */}
                     <div className="receipt-image-preview-container">
                         <img 
+                            id="editing-receipt-image"
+                            crossOrigin="anonymous"
                             src={editingReceipt.displayImageUrl}
                             alt="Receipt Preview"
                             className="modal-receipt-image"
@@ -473,10 +534,12 @@ export const AIReceiptsApp: React.FC = () => {
                             {isOptimizingImage ? 'Optimizing...' : '✨ Crop & Enhance'}
                         </button>
                         <button 
-                            className="action-btn coming-soon-btn"
-                            disabled
+                            className="action-btn"
+                            onClick={handleCanifyEnhance}
+                            disabled={isOptimizingImage}
+                            title="Best for receipts on dark backgrounds"
                         >
-                            Canify Enhance (Coming Soon)
+                            Canify Enhance
                         </button>
                         <button className="action-btn" onClick={handleEditDetailsClick}>Edit Details</button>
                         

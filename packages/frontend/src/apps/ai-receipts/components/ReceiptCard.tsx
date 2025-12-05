@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSwipeable } from 'react-swipeable';
-import { ReceiptData } from '../../../services/receiptService';
+import type { ReceiptData } from '../../../services/receiptService';
 import './ReceiptCard.css';
 
 interface ReceiptCardProps {

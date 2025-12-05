@@ -1,5 +1,5 @@
 import React from 'react';
-import { ReceiptData } from '../../../services/receiptService';
+import type { ReceiptData } from '../../../services/receiptService';
 import { ReceiptCard } from './ReceiptCard';
 import { format, parseISO, isValid } from 'date-fns';
 import './ReceiptList.css';

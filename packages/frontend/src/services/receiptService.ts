@@ -87,3 +87,15 @@ export const updateReceipt = async (id: string, updatedData: Partial<ReceiptData
     return response.data;
 };
 
+export const uploadOptimizedImage = async (id: string, file: Blob): Promise<{ message: string; displayImageUrl: string }> => {
+  const formData = new FormData();
+  formData.append('optimizedImage', file, 'optimized-receipt.jpg');
+
+  const response = await axios.post(`${API_BASE_URL}/${id}/upload-optimized-image`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+

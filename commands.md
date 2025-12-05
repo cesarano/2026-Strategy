@@ -1,62 +1,30 @@
-### Implementing Image Enhancement Features (Crop & Enhance, Canify Enhance)
+### Fixing OpenCV.js Initialization Issue
 
 **Reason:**
-To refactor the existing generic image optimization functionality into a more specific, extensible "Crop & Enhance" feature, and to introduce a placeholder for a future "Canify Enhance" feature. This involves centralizing image processing using the `sharp` library.
+The frontend encountered a runtime error "Enhancement Failed: Can't find variable cvReadyPromise", indicating that `cvReadyPromise` was being used in `DocumentScanner.ts` without being properly defined or initialized, leading to OpenCV.js related functions failing. Additionally, a minor TypeScript error (`TS6133`) was present in `AIReceiptsApp.tsx`.
 
 **Steps Performed:**
 
-1.  **Installed `sharp` in Backend:**
-    *   **Command:** `npm install sharp --prefix packages/backend && npm install @types/sharp --save-dev --prefix packages/backend`
-    *   **Reason:** To enable high-performance image processing capabilities in the Node.js backend.
+1.  **Investigated `cvReadyPromise` Usage:**
+    *   **Command:** `search_file_content cvReadyPromise`
+    *   **Reason:** To locate where `cvReadyPromise` was being referenced and to identify its missing definition.
 
-2.  **Created `ImageProcessorService`:**
-    *   **File:** `packages/backend/src/services/ImageProcessorService.ts`
-    *   **Reason:** To encapsulate `sharp`-based image processing logic, including resizing, cropping, format conversion, grayscale, sharpening, noise reduction, and metadata stripping, into a reusable service.
+2.  **Reviewed `DocumentScanner.ts` and `DocumentScanner.ts.backup`:**
+    *   **Command:** `read_file packages/frontend/src/services/DocumentScanner.ts` and `read_file packages/frontend/src/services/DocumentScanner.ts.backup`
+    *   **Reason:** To compare the current (broken) implementation with a previous backup that contained the `cvReadyPromise` definition.
 
-3.  **Created `ImageProcessorService` Test File:**
-    *   **File:** `packages/backend/src/services/__tests__/ImageProcessorService.test.ts`
-    *   **Reason:** To ensure the `ImageProcessorService` functions correctly and to prevent regressions.
+3.  **Restored `cvReadyPromise` Definition in `DocumentScanner.ts`:**
+    *   **Command:** `replace` (as executed by the agent)
+    *   **Reason:** To re-introduce the `cvReadyPromise` Promise, which waits for `cv` (OpenCV.js) to be fully loaded and initialized, into the `DocumentScanner.ts` file. This resolves the `ReferenceError`.
 
-4.  **Modified `ReceiptProcessor` (Backend):**
-    *   **File:** `packages/backend/src/services/ai/ReceiptProcessor.ts`
-    *   **Changes:**
-        *   Imported `ImageProcessorService` and `ImageProcessingOptions`.
-        *   Instantiated `ImageProcessorService` and `ReceiptPersistenceService` within its constructor.
-        *   Added a new asynchronous method `cropEnhanceReceiptImage` to handle the image processing workflow using `ImageProcessorService`, including saving the processed image and updating receipt data.
-    *   **Reason:** To integrate the new image processing capabilities into the receipt handling logic and provide a dedicated method for the "Crop & Enhance" feature.
+4.  **Fixed Unused Variable Error in `AIReceiptsApp.tsx`:**
+    *   **Command:** `replace` (as executed by the agent)
+    *   **Reason:** To resolve a `TS6133` TypeScript error by removing the unused `e` parameter from the `onerror` callback function in `AIReceiptsApp.tsx`.
 
-5.  **Modified `receiptRoutes` (Backend):**
-    *   **File:** `packages/backend/src/routes/receiptRoutes.ts`
-    *   **Changes:**
-        *   Renamed the route `POST /api/receipts/:id/optimize-image` to `POST /api/receipts/:id/crop-enhance`.
-        *   Removed the direct `sharp` implementation from the route handler.
-        *   Updated the route handler to call `receiptProcessor.cropEnhanceReceiptImage` and pass `ImageProcessingOptions` from the request body.
-        *   Removed the direct `sharp` import.
-    *   **Reason:** To update the API endpoint name, delegate image processing to the `ReceiptProcessor` service, and enable configurable enhancement options via the request body.
+5.  **Corrected Race Condition in `processReceipt`:**
+    *   **Command:** `replace` (as executed by the agent)
+    *   **Reason:** Moved the `if (typeof cv === 'undefined')` check in `processReceipt` to *after* `await cvReadyPromise`. This ensures that the function reliably waits for OpenCV.js to be ready before attempting to use the `cv` object, preventing potential race conditions where `processReceipt` might be called before `cv` is fully loaded.
 
-6.  **Modified `receiptService` (Frontend):**
-    *   **File:** `packages/frontend/src/services/receiptService.ts`
-    *   **Changes:**
-        *   Added `ImageProcessingOptions` interface for type safety.
-        *   Renamed `optimizeReceiptImage` to `cropEnhanceReceiptImage`.
-        *   Updated the API endpoint it calls from `optimize-image` to `crop-enhance`.
-        *   Modified its signature to accept `options: ImageProcessingOptions` and pass them in the `POST` request body.
-    *   **Reason:** To align the frontend service with the renamed backend API and allow the frontend to specify image processing options.
-
-7.  **Modified `Mode2App` (Frontend):**
-    *   **File:** `packages/frontend/src/apps/mode2/Mode2App.tsx`
-    *   **Changes:**
-        *   Updated the import statement to use `cropEnhanceReceiptImage` and `ImageProcessingOptions`.
-        *   Modified the `handleOptimizeImage` function to call `cropEnhanceReceiptImage` with a default set of `ImageProcessingOptions`.
-        *   Added a disabled "Canify Enhance (Coming Soon)" button as a placeholder in the UI.
-    *   **Reason:** To integrate the new "Crop & Enhance" functionality into the UI and provide a placeholder for future enhancement features.
-
-**Troubleshooting & Fixes:**
-
-*   **TSError: Multiple Default Exports (`receiptRoutes.ts`)**:
-    *   **Issue:** Previous `replace` operations inadvertently duplicated route definitions and `export default router;` statements in `receiptRoutes.ts`.
-    *   **Resolution:** Performed a targeted `replace` operation to remove all duplicate routes and ensure only one `export default router;` statement remained at the end of the file.
-
-*   **Frontend `Unexpected token` Error (`Mode2App.tsx`)**:
-    *   **Issue:** A previous `replace` operation incorrectly placed function definitions (like `handleOptimizeImage`) inside the JSX return block of the `Mode2App` component, creating a syntax error and duplicating component JSX.
-    *   **Resolution:** Overwrote the entire `packages/frontend/src/apps/mode2/Mode2App.tsx` file with a completely regenerated, corrected version, ensuring all functions are defined at the top level of the component and the JSX structure is valid.
+6.  **Verified Frontend Build:**
+    *   **Command:** `npx tsc -b packages/frontend`
+    *   **Reason:** To confirm that all TypeScript errors, including the newly introduced definition and the `TS6133` error, were resolved and the frontend project compiles successfully.
