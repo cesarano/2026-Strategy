@@ -84,6 +84,21 @@ router.post('/', upload.single('receiptImage'), async (req: Request, res: Respon
   }
 });
 
+// PUT /api/receipts/:id - Update a receipt
+router.put('/:id', async (req: Request, res: Response) => {
+  try {
+    const updatedReceipt = await persistenceService.updateReceipt(req.params.id, req.body);
+    if (updatedReceipt) {
+      res.json(updatedReceipt);
+    } else {
+      res.status(404).json({ error: 'Receipt not found' });
+    }
+  } catch (error) {
+    console.error('Error updating receipt:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // DELETE /api/receipts/:id - Delete a receipt
 router.delete('/:id', async (req: Request, res: Response) => {
   try {

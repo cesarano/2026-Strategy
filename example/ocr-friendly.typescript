@@ -1,0 +1,43 @@
+import jscanify from 'jscanify';
+
+// Declare global cv variable for TypeScript if using CDN
+declare const cv: any; 
+
+export const processReceipt = (imageElement: HTMLImageElement): HTMLCanvasElement => {
+  const scanner = new jscanify();
+
+  // 1. Identification & Crop
+  // extractPaper returns a canvas with the cropped, un-warped image
+  const croppedCanvas = scanner.extractPaper(imageElement, imageElement.width, imageElement.height);
+  
+  // 2. Enhancement (Pre-processing for OCR)
+  // We need to convert the canvas back to an OpenCV Matrix to process it
+  const srcMat = cv.imread(croppedCanvas);
+  const dstMat = new cv.Mat();
+  
+  // A. Convert to Grayscale (OCR engines prefer 1 channel)
+  cv.cvtColor(srcMat, srcMat, cv.COLOR_RGBA2GRAY, 0);
+
+  // B. Adaptive Thresholding (The "Secret Sauce" for receipts)
+  // This turns the image black and white based on local pixel neighborhoods, 
+  // effectively killing shadows and boosting text contrast.
+  // Block size (11) and C (2) might need tweaking based on camera resolution.
+  cv.adaptiveThreshold(
+    srcMat, 
+    dstMat, 
+    255, 
+    cv.ADAPTIVE_THRESH_GAUSSIAN_C, 
+    cv.THRESH_BINARY, 
+    21, 
+    10
+  );
+
+  // 3. Render back to canvas
+  cv.imshow(croppedCanvas, dstMat);
+
+  // Cleanup OpenCV memory (Crucial!)
+  srcMat.delete();
+  dstMat.delete();
+
+  return croppedCanvas; // This canvas is now ready for Tesseract.js or API upload
+};

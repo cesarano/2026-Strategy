@@ -1,0 +1,6 @@
+Install Dependencies You will need jscanify and the OpenCV WASM file.
+Bash
+
+npm install jscanify
+
+Note: You also need to include opencv.js in your index.html or load it asynchronously, as jscanify depends on the global cv object.

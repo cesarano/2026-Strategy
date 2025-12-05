@@ -33,6 +33,22 @@ export class ReceiptPersistenceService {
     await fs.writeFile(filePath, JSON.stringify(receipt, null, 2));
   }
 
+  async updateReceipt(id: string, updatedData: Partial<ReceiptData>): Promise<ReceiptData | null> {
+    const filePath = path.join(this.dataDir, `${id}.json`);
+    try {
+      const existingReceipt = await this.getReceipt(id);
+      if (!existingReceipt) {
+        return null;
+      }
+      const newReceipt = { ...existingReceipt, ...updatedData, id };
+      await this.saveReceipt(newReceipt);
+      return newReceipt;
+    } catch (error) {
+      console.error(`Error updating receipt ${id}:`, error);
+      return null;
+    }
+  }
+
   async getAllReceipts(): Promise<ReceiptData[]> {
     try {
       const files = await fs.readdir(this.dataDir);

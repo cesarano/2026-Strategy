@@ -1,4 +1,4 @@
-.receipt-app-container {
+.ai-receipts-app-container {
   padding: 20px;
   max-width: 800px;
   margin: 0 auto;
@@ -307,7 +307,7 @@
 
 .receipt-image-preview-container {
     width: 100%;
-    height: 200px; /* Fixed height for preview */
+    height: 150px; /* Reduced height */
     background-color: #f0f0f0;
     display: flex;
     justify-content: center;
@@ -407,13 +407,42 @@
   text-align: right;
 }
 
+/* Modal Info Compact */
+.modal-info-compact {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    font-size: 0.9em;
+}
+
+.modal-info-compact p {
+    margin: 0;
+}
+
 /* Action Buttons */
 .manage-actions {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
     margin-top: 20px;
 }
+
+.manage-actions .action-btn {
+    grid-column: span 2; /* Make primary buttons full-width */
+}
+
+.manage-actions .sub-actions {
+    grid-column: span 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.sub-actions .action-btn {
+    padding: 10px; /* Smaller padding for sub-buttons */
+}
+
 
 .image-version-toggle {
     display: flex;
@@ -486,4 +515,76 @@
     height: 300px;
     flex: none;
   }
+}
+
+/* Form Group Styling */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #555;
+    font-size: 0.9em;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Item Editing Styles */
+.item-edit-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.item-edit-row {
+    display: grid;
+    grid-template-columns: 1fr 100px 40px;
+    gap: 10px;
+    align-items: center;
+}
+
+.item-edit-row input {
+    width: 100%;
+}
+
+.remove-item-btn {
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2em;
+    line-height: 1;
+}
+
+.add-item-btn {
+    background: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: bold;
 }

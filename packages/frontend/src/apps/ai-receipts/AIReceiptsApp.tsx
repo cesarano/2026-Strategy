@@ -1,13 +1,16 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { getReceipts, uploadReceipt, deleteReceipt, cropEnhanceReceiptImage, downloadReceiptImage, setDisplayImageVersion, type ReceiptData, type ImageProcessingOptions } from '../../services/receiptService';
-import './Mode2App.css';
+import { getReceipts, uploadReceipt, deleteReceipt, cropEnhanceReceiptImage, downloadReceiptImage, setDisplayImageVersion, updateReceipt, type ReceiptData, type ImageProcessingOptions } from '../../services/receiptService';
+import './AIReceiptsApp.css';
 
-export const Mode2App: React.FC = () => {
+type EditingReceipt = ReceiptData & { isEditing?: boolean };
+
+export const AIReceiptsApp: React.FC = () => {
   const [receipts, setReceipts] = useState<ReceiptData[]>([]);
   const [filteredReceipts, setFilteredReceipts] = useState<ReceiptData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedReceipt, setSelectedReceipt] = useState<ReceiptData | null>(null);
-  const [editingReceipt, setEditingReceipt] = useState<ReceiptData | null>(null);
+  const [editingReceipt, setEditingReceipt] = useState<EditingReceipt | null>(null);
+  const [editingFormData, setEditingFormData] = useState<Partial<ReceiptData> | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isOptimizingImage, setIsOptimizingImage] = useState(false); // New state for image optimization
   const [viewMode, setViewMode] = useState<'day' | 'month' | 'year'>('day');
@@ -34,7 +37,13 @@ export const Mode2App: React.FC = () => {
   const loadReceipts = async () => {
     try {
       const data = await getReceipts();
-      setReceipts(data);
+      // Explicitly sort receipts by date (newest first) on the client-side
+      const sortedData = data.sort((a, b) => {
+        const dateA = new Date(a.date || a.createdAt).getTime();
+        const dateB = new Date(b.date || b.createdAt).getTime();
+        return dateB - dateA;
+      });
+      setReceipts(sortedData);
     } catch (error) {
       console.error('Failed to load receipts', error);
     }
@@ -127,6 +136,86 @@ export const Mode2App: React.FC = () => {
       console.error('Failed to set display image version:', error);
       alert('Failed to switch image version.');
     }
+  };
+
+  const handleEditDetailsClick = () => {
+    if (!editingReceipt) return;
+    setEditingFormData(editingReceipt);
+    setEditingReceipt({ ...editingReceipt, isEditing: true });
+  };
+
+  const handleCancelEdit = () => {
+    if (!editingReceipt) return;
+    setEditingReceipt({ ...editingReceipt, isEditing: false });
+    setEditingFormData(null);
+  };
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!editingFormData) return;
+    const { name, value, type } = e.target;
+    
+    // Handle number inputs
+    const newValue = type === 'number' ? parseFloat(value) : value;
+
+    setEditingFormData({
+      ...editingFormData,
+      [name]: newValue,
+    });
+  };
+
+  const handleItemChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!editingFormData || !editingFormData.items) return;
+    const { name, value, type } = e.target;
+    const newItems = [...editingFormData.items];
+    const itemToUpdate = { ...newItems[index] };
+    
+    if (name === 'name') {
+      itemToUpdate.name = value;
+    } else if (name === 'price') {
+      itemToUpdate.price = parseFloat(value) || 0;
+    }
+
+    newItems[index] = itemToUpdate;
+    setEditingFormData({ ...editingFormData, items: newItems });
+  };
+
+  const handleAddItem = () => {
+    if (!editingFormData) return;
+    const newItems = [...(editingFormData.items || [])];
+    newItems.push({ name: '', price: 0 });
+    setEditingFormData({ ...editingFormData, items: newItems });
+  };
+
+  const handleRemoveItem = (index: number) => {
+    if (!editingFormData || !editingFormData.items) return;
+    const newItems = [...editingFormData.items];
+    newItems.splice(index, 1);
+    setEditingFormData({ ...editingFormData, items: newItems });
+  };
+
+  const handleSave = async () => {
+    if (!editingFormData || !editingReceipt) return;
+
+    try {
+      const updatedReceipt = await updateReceipt(editingReceipt.id, editingFormData);
+      
+      // Update local state
+      setReceipts(prev => prev.map(r => r.id === updatedReceipt.id ? updatedReceipt : r));
+      
+      // Exit editing mode
+      setEditingReceipt(updatedReceipt);
+      setEditingFormData(null);
+      alert('Receipt updated successfully!');
+
+    } catch (error) {
+      console.error('Failed to update receipt', error);
+      alert('Failed to save changes. Please try again.');
+    }
+  };
+
+  const handleCloseModal = () => {
+    setEditingReceipt(null);
+    setEditingFormData(null);
   };
 
   const formatCurrency = (amount: number | null, currency: string | null) => {
@@ -279,80 +368,135 @@ export const Mode2App: React.FC = () => {
 
       {/* Manage/Edit Modal */}
       {editingReceipt && (
-        <div className="receipt-detail-overlay" onClick={() => setEditingReceipt(null)}>
+        <div className="receipt-detail-overlay" onClick={handleCloseModal}>
            <div className="receipt-manage-modal" onClick={e => e.stopPropagation()}>
               <div className="modal-header">
-                <h3>Manage Receipt</h3>
-                <button className="close-btn" onClick={() => setEditingReceipt(null)}>&times;</button>
+                <h3>{editingReceipt.isEditing ? 'Edit Details' : 'Manage Receipt'}</h3>
+                <button className="close-btn" onClick={handleCloseModal}>&times;</button>
               </div>
               <div className="modal-body">
-                 {/* Display current image */}
-                 <div className="receipt-image-preview-container">
-                    <img 
-                        src={editingReceipt.displayImageUrl}
-                        alt="Receipt Preview"
-                        className="modal-receipt-image"
-                        onError={(e) => {
-                            (e.target as HTMLImageElement).onerror = null; // Prevent infinite loop
-                            (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-image"%3E%3Crect x="3" y="3" width="18" height="18" rx="2" ry="2"%3E%3C/rect%3E%3Ccircle cx="8.5" cy="8.5" r="1.5"%3E%3C/circle%3E%3Cpolyline points="21 15 16 10 5 21"%3E%3C/polyline%3E%3C/svg%3E'; // Generic image icon
-                            (e.target as HTMLImageElement).style.backgroundColor = '#f0f0f0';
-                        }} 
-                    />
-                 </div>
-                 <div className="image-version-toggle">
-                    <label>
-                        <input 
-                            type="radio" 
-                            name="imageVersion" 
-                            value="original"
-                            checked={editingReceipt.displayImageUrl === editingReceipt.originalImageUrl}
-                            onChange={() => handleSetDisplayImageVersion('original')}
-                        /> Original
-                    </label>
-                    {editingReceipt.optimizedImageUrl && (
+                {editingReceipt.isEditing ? (
+                  <>
+                    <div className="info-group form-group">
+                      <label htmlFor="storeName">Store Name</label>
+                      <input type="text" id="storeName" name="storeName" value={editingFormData?.storeName || ''} onChange={handleFormChange} />
+                    </div>
+                    <div className="info-group form-group">
+                      <label htmlFor="date">Date</label>
+                      <input type="date" id="date" name="date" value={editingFormData?.date || ''} onChange={handleFormChange} />
+                    </div>
+                    <div className="info-group form-group">
+                      <label htmlFor="totalAmount">Total Amount</label>
+                      <input type="number" id="totalAmount" name="totalAmount" value={editingFormData?.totalAmount || 0} onChange={handleFormChange} />
+                    </div>
+
+                    <div className="info-group form-group">
+                        <label>Items</label>
+                        <div className="item-edit-list">
+                            {editingFormData?.items?.map((item, index) => (
+                                <div key={index} className="item-edit-row">
+                                    <input 
+                                        type="text" 
+                                        name="name" 
+                                        placeholder="Item name"
+                                        value={item.name} 
+                                        onChange={(e) => handleItemChange(index, e)} 
+                                    />
+                                    <input 
+                                        type="number" 
+                                        name="price" 
+                                        placeholder="Price"
+                                        value={item.price || ''} 
+                                        onChange={(e) => handleItemChange(index, e)} 
+                                    />
+                                    <button className="remove-item-btn" onClick={() => handleRemoveItem(index)}>&times;</button>
+                                </div>
+                            ))}
+                        </div>
+                        <button className="add-item-btn" onClick={handleAddItem}>+ Add Item</button>
+                    </div>
+
+                    <div className="manage-actions">
+                      <button className="action-btn edit-btn-large" onClick={handleSave}>Save Changes</button>
+                      <button className="action-btn" onClick={handleCancelEdit}>Cancel</button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Display current image */}
+                    <div className="receipt-image-preview-container">
+                        <img 
+                            src={editingReceipt.displayImageUrl}
+                            alt="Receipt Preview"
+                            className="modal-receipt-image"
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).onerror = null; // Prevent infinite loop
+                                (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-image"%3E%3Crect x="3" y="3" width="18" height="18" rx="2" ry="2"%3E%3C/rect%3E%3Ccircle cx="8.5" cy="8.5" r="1.5"%3E%3C/circle%3E%3Cpolyline points="21 15 16 10 5 21"%3E%3C/polyline%3E%3C/svg%3E'; // Generic image icon
+                                (e.target as HTMLImageElement).style.backgroundColor = '#f0f0f0';
+                            }} 
+                        />
+                    </div>
+                    <div className="image-version-toggle">
                         <label>
                             <input 
                                 type="radio" 
                                 name="imageVersion" 
-                                value="optimized"
-                                checked={editingReceipt.displayImageUrl === editingReceipt.optimizedImageUrl}
-                                onChange={() => handleSetDisplayImageVersion('optimized')}
-                            /> Optimized
+                                value="original"
+                                checked={editingReceipt.displayImageUrl === editingReceipt.originalImageUrl}
+                                onChange={() => handleSetDisplayImageVersion('original')}
+                            /> Original
                         </label>
-                    )}
-                 </div>
+                        {editingReceipt.optimizedImageUrl && (
+                            <label>
+                                <input 
+                                    type="radio" 
+                                    name="imageVersion" 
+                                    value="optimized"
+                                    checked={editingReceipt.displayImageUrl === editingReceipt.optimizedImageUrl}
+                                    onChange={() => handleSetDisplayImageVersion('optimized')}
+                                /> Optimized
+                            </label>
+                        )}
+                    </div>
 
-                 <p><strong>Store:</strong> {editingReceipt.storeName}</p>
-                 <p><strong>Amount:</strong> {formatCurrency(editingReceipt.totalAmount, editingReceipt.currency)}</p>
-                 
-                 <div className="manage-actions">
-                    <button 
-                        className="action-btn"
-                        onClick={handleOptimizeImage}
-                        disabled={isOptimizingImage}
-                    >
-                        {isOptimizingImage ? 'Optimizing...' : '✨ Crop & Enhance'}
-                    </button>
-                    <button 
-                        className="action-btn coming-soon-btn"
-                        disabled
-                    >
-                        Canify Enhance (Coming Soon)
-                    </button>
-                    <button 
-                        className="action-btn"
-                        onClick={handleDownloadImage}
-                    >
-                        ⬇️ Download Image
-                    </button>
-                    <button className="action-btn coming-soon-btn" disabled>Edit Details (Coming Soon)</button>
-                    <button 
-                        className="action-btn delete-btn-large"
-                        onClick={() => handleDeleteReceipt(editingReceipt.id)}
-                    >
-                        Delete Receipt
-                    </button>
-                 </div>
+                    <div className="modal-info-compact">
+                        <p><strong>Store:</strong> {editingReceipt.storeName}</p>
+                        <p><strong>Amount:</strong> {formatCurrency(editingReceipt.totalAmount, editingReceipt.currency)}</p>
+                    </div>
+                    
+                    <div className="manage-actions">
+                        <button 
+                            className="action-btn"
+                            onClick={handleOptimizeImage}
+                            disabled={isOptimizingImage}
+                        >
+                            {isOptimizingImage ? 'Optimizing...' : '✨ Crop & Enhance'}
+                        </button>
+                        <button 
+                            className="action-btn coming-soon-btn"
+                            disabled
+                        >
+                            Canify Enhance (Coming Soon)
+                        </button>
+                        <button className="action-btn" onClick={handleEditDetailsClick}>Edit Details</button>
+                        
+                        <div className="sub-actions">
+                            <button 
+                                className="action-btn"
+                                onClick={handleDownloadImage}
+                            >
+                                ⬇️ Download
+                            </button>
+                            <button 
+                                className="action-btn delete-btn-large"
+                                onClick={() => handleDeleteReceipt(editingReceipt.id)}
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                  </>
+                )}
               </div>
            </div>
         </div>

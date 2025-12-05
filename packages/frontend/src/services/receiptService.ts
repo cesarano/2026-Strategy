@@ -82,3 +82,8 @@ export const setDisplayImageVersion = async (id: string, version: 'original' | '
   return response.data;
 };
 
+export const updateReceipt = async (id: string, updatedData: Partial<ReceiptData>): Promise<ReceiptData> => {
+    const response = await axios.put(`${API_BASE_URL}/${id}`, updatedData);
+    return response.data;
+};
+

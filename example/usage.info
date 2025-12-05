@@ -1,0 +1,1 @@
+Crucial Warning on "White Receipts": Open-source edge detection (Canny algorithm) relies on contrast. A white receipt on a white table is the "hard mode" of computer vision. If you use this method, you must instruct users to place the receipt on a dark background. 
