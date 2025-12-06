@@ -15,11 +15,24 @@ export const AIReceiptsApp: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isOptimizingImage, setIsOptimizingImage] = useState(false); // New state for image optimization
   const [viewMode, setViewMode] = useState<'day' | 'month' | 'year'>('day');
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('receipts-theme');
+    if (saved === 'dark' || saved === 'light') return saved;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadReceipts();
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('receipts-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   useEffect(() => {
     if (!searchTerm.trim()) {
@@ -316,7 +329,7 @@ export const AIReceiptsApp: React.FC = () => {
   const sortedGroupKeys = Object.keys(groupedReceipts).sort().reverse();
 
   return (
-    <div className="receipt-app-container">
+    <div className={`receipt-app-container ${theme}-mode`}>
       <div className="receipt-header">
         <div className="header-top">
             <h2>My Receipts</h2>
@@ -343,6 +356,13 @@ export const AIReceiptsApp: React.FC = () => {
                     className={`toggle-btn ${viewMode === 'year' ? 'active' : ''}`}
                     onClick={() => setViewMode('year')}
                 >Year</button>
+                <button 
+                    className="toggle-btn theme-toggle"
+                    onClick={toggleTheme}
+                    title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+                >
+                    {theme === 'light' ? '🌙' : '☀️'}
+                </button>
             </div>
         </div>
 

@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachanglog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2025-12-06
+
+### Added
+- **Dark Mode Support:** Implemented a full Light/Dark mode theming system for the AI Receipts app.
+  - Added a toggle button (☀️/🌙) to the main header.
+  - Added auto-detection of system color preference.
+  - Added persistence of user theme preference to `localStorage`.
+  - Refactored `AIReceiptsApp.css` to use CSS variables for flexible theming.
+
+### Fixed
+- **Visual Visibility:** Fixed an issue where the "Receipt Details" and "Items List" were invisible (white text on white background) when the user's system was in Dark Mode. The interface now correctly respects the active theme.
+
 ## [0.3.0] - 2025-12-05
 
 ### Added
